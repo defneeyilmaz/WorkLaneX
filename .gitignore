@@ -1,0 +1,62 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# .NET
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.cache
+project.lock.json
+project.fragment.lock.json
+artifacts/
+*.nupkg
+*.snupkg
+
+# EF
+*.db
+*.db-shm
+*.db-wal
+
+# Node / Next.js (frontend — added in later phases)
+node_modules/
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.env
+.env.local
+.env.*.local
+
+# Docker
+docker-data/
+
+# Logs
+logs/
+*.log
+
+# Test / coverage
+coverage/
+TestResults/
+
+# Secrets
+appsettings.Development.json
+!appsettings.Development.example.json
+secrets.json
