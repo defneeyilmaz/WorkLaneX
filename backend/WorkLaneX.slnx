@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WorkLaneX.Api/WorkLaneX.Api.csproj" />
+    <Project Path="src/WorkLaneX.Application/WorkLaneX.Application.csproj" />
+    <Project Path="src/WorkLaneX.Domain/WorkLaneX.Domain.csproj" />
+    <Project Path="src/WorkLaneX.Infrastructure/WorkLaneX.Infrastructure.csproj" />
+  </Folder>
+</Solution>

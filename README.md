@@ -47,15 +47,15 @@ WorkLaneX/
 Backend and frontend setup instructions will be added as each development phase lands.
 
 ```bash
-# Clone
-git clone https://github.com/<your-username>/WorkLaneX.git
+git clone https://github.com/defneeyilmaz/WorkLaneX.git
 cd WorkLaneX
 
-# Backend (after Phase 1–2)
 cd backend
 dotnet restore
 dotnet run --project src/WorkLaneX.Api
 ```
+
+Health check: `GET http://localhost:<port>/api/health`
 
 ## Development phases
 
