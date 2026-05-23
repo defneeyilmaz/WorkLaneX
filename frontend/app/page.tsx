@@ -1,23 +1,52 @@
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
 export default function Home() {
   return (
     <div className="flex min-h-full flex-col">
-      <header className="border-b border-zinc-200 px-6 py-4">
-        <span className="text-lg font-semibold tracking-tight text-zinc-900">
-          WorkLaneX
-        </span>
+      <header className="border-b border-border px-6 py-4">
+        <span className="text-lg font-semibold tracking-tight">WorkLaneX</span>
       </header>
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-16">
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-900">
-          Team workspace for shipping together
-        </h1>
-        <p className="mt-4 text-lg leading-relaxed text-zinc-600">
-          Tasks, docs, and updates in one place. Built for small software teams
-          and project groups.
-        </p>
-        <p className="mt-8 text-sm text-zinc-500">
-          App screens (login, dashboard, board) come in the next phases.
-        </p>
+      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-6 py-16">
+        <Card>
+          <CardHeader>
+            <CardTitle>Team workspace for shipping together</CardTitle>
+            <CardDescription>
+              Tasks, docs, and updates in one place for small software teams and
+              project groups.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email-preview">Work email</Label>
+              <Input
+                id="email-preview"
+                type="email"
+                placeholder="you@team.com"
+                disabled
+              />
+              <p className="text-xs text-muted-foreground">
+                Sign-in form preview — wired up in the auth phase.
+              </p>
+            </div>
+          </CardContent>
+          <CardFooter className="flex gap-2">
+            <Button disabled>Log in</Button>
+            <Button variant="outline" disabled>
+              Create account
+            </Button>
+          </CardFooter>
+        </Card>
       </main>
     </div>
   );

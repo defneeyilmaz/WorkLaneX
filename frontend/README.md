@@ -1,6 +1,6 @@
 # WorkLaneX Frontend
 
-Next.js App Router, TypeScript, Tailwind CSS.
+Next.js App Router, TypeScript, Tailwind CSS, shadcn/ui.
 
 ## Run locally
 
@@ -12,6 +12,16 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
+
+## UI components
+
+shadcn/ui is configured in `components.json`. Primitives live under `components/ui/` (button, input, card, label).
+
+Add more:
+
+```bash
+npx shadcn@latest add dialog
+```
 
 ## Scripts
 
