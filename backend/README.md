@@ -23,9 +23,30 @@ dotnet restore
 dotnet run --project src/WorkLaneX.Api
 ```
 
-API: `https://localhost:7xxx` (see `launchSettings.json`)
+API: `http://localhost:5147` (see `launchSettings.json`)
+
+Start PostgreSQL first (from repo root):
+
+```bash
+docker compose -f docker/docker-compose.yml up -d
+```
 
 Health check: `GET /api/health`
+
+Example response when the database is running:
+
+```json
+{
+  "status": "healthy",
+  "service": "WorkLaneX.Api",
+  "database": "connected",
+  "timestamp": "..."
+}
+```
+
+If PostgreSQL is stopped, `status` is `degraded` and `database` is `unavailable`.
+
+OpenAPI document (development): `/openapi/v1.json`
 
 ## Solution structure
 

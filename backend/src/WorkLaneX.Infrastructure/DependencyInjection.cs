@@ -1,5 +1,8 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using WorkLaneX.Application;
+using WorkLaneX.Application.Common.Interfaces;
+using WorkLaneX.Infrastructure.Persistence;
 
 namespace WorkLaneX.Infrastructure;
 
@@ -9,9 +12,14 @@ public static class DependencyInjection
         this IServiceCollection services,
         string connectionString)
     {
-        _ = connectionString;
         services.AddApplication();
-        // EF Core DbContext and external services will be registered in later phases.
+
+        services.AddDbContext<WorkLaneXDbContext>(options =>
+            options.UseNpgsql(connectionString));
+
+        services.AddScoped<IApplicationDbContext>(provider =>
+            provider.GetRequiredService<WorkLaneXDbContext>());
+
         return services;
     }
 }
