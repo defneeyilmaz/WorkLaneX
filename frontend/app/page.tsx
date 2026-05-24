@@ -1,3 +1,4 @@
+import { ApiHealthStatus } from "@/components/api-health-status";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -39,6 +40,7 @@ export default function Home() {
                 Sign-in form preview — wired up in the auth phase.
               </p>
             </div>
+            <ApiHealthStatus />
           </CardContent>
           <CardFooter className="flex gap-2">
             <Button disabled>Log in</Button>

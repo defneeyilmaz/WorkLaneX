@@ -18,7 +18,7 @@ builder.Services.AddCors(options =>
 });
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? "Host=localhost;Port=5432;Database=worklanex;Username=postgres;Password=postgres";
+    ?? "Host=localhost;Port=5433;Database=worklanex;Username=postgres;Password=postgres";
 
 builder.Services.AddInfrastructure(connectionString);
 
