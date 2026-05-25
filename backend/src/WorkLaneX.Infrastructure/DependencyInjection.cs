@@ -1,8 +1,11 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WorkLaneX.Application;
 using WorkLaneX.Application.Common.Interfaces;
+using WorkLaneX.Application.Common.Settings;
+using WorkLaneX.Infrastructure.Auth;
 using WorkLaneX.Infrastructure.Identity;
 using WorkLaneX.Infrastructure.Persistence;
 
@@ -12,9 +15,13 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        string connectionString)
+        string connectionString,
+        IConfiguration configuration)
     {
         services.AddApplication();
+
+        services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
         services.AddDbContext<WorkLaneXDbContext>(options =>
             options.UseNpgsql(connectionString));
