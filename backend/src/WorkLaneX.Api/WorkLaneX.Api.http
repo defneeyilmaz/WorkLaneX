@@ -1,6 +1,27 @@
 @WorkLaneX.Api_HostAddress = http://localhost:5147
 
-GET {{WorkLaneX.Api_HostAddress}}/weatherforecast/
-Accept: application/json
+### Health
+GET {{WorkLaneX.Api_HostAddress}}/api/health
 
-###
+### Register
+POST {{WorkLaneX.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "email": "demo@worklanex.local",
+  "password": "DemoPass123",
+  "fullName": "Demo User"
+}
+
+### Login
+POST {{WorkLaneX.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "email": "demo@worklanex.local",
+  "password": "DemoPass123"
+}
+
+### Me (replace token after login)
+GET {{WorkLaneX.Api_HostAddress}}/api/auth/me
+Authorization: Bearer {{token}}

@@ -22,6 +22,7 @@ public static class DependencyInjection
 
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.AddScoped<IUserAccountService, UserAccountService>();
 
         services.AddDbContext<WorkLaneXDbContext>(options =>
             options.UseNpgsql(connectionString));
