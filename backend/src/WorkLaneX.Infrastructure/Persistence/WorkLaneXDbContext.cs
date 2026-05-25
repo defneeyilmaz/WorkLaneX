@@ -1,10 +1,14 @@
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using WorkLaneX.Application.Common.Interfaces;
 using WorkLaneX.Domain.Entities;
+using WorkLaneX.Infrastructure.Identity;
 
 namespace WorkLaneX.Infrastructure.Persistence;
 
-public class WorkLaneXDbContext : DbContext, IApplicationDbContext
+public class WorkLaneXDbContext
+    : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>, IApplicationDbContext
 {
     public WorkLaneXDbContext(DbContextOptions<WorkLaneXDbContext> options)
         : base(options)
@@ -17,7 +21,7 @@ public class WorkLaneXDbContext : DbContext, IApplicationDbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(WorkLaneXDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(WorkLaneXDbContext).Assembly);
     }
 }
