@@ -3,21 +3,26 @@ using Microsoft.Extensions.Options;
 using WorkLaneX.Application.Common.Interfaces;
 using WorkLaneX.Application.Common.Models;
 using WorkLaneX.Application.Common.Settings;
+using WorkLaneX.Domain.Entities;
+using WorkLaneX.Domain.Enums;
 
 namespace WorkLaneX.Infrastructure.Identity;
 
 public class UserAccountService : IUserAccountService
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IApplicationDbContext _context;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly JwtSettings _jwtSettings;
 
     public UserAccountService(
         UserManager<ApplicationUser> userManager,
+        IApplicationDbContext context,
         IJwtTokenGenerator jwtTokenGenerator,
         IOptions<JwtSettings> jwtSettings)
     {
         _userManager = userManager;
+        _context = context;
         _jwtTokenGenerator = jwtTokenGenerator;
         _jwtSettings = jwtSettings.Value;
     }
@@ -46,6 +51,8 @@ public class UserAccountService : IUserAccountService
             return OperationResult<AuthResponse>.Failure(
                 result.Errors.Select(e => e.Description));
         }
+
+        await CreateDefaultWorkspaceAsync(user, cancellationToken);
 
         return OperationResult<AuthResponse>.Success(BuildAuthResponse(user));
     }
@@ -92,4 +99,26 @@ public class UserAccountService : IUserAccountService
 
     private static UserSummary ToUserSummary(ApplicationUser user) =>
         new(user.Id, user.Email!, user.FullName);
+
+    private async Task CreateDefaultWorkspaceAsync(
+        ApplicationUser user,
+        CancellationToken cancellationToken)
+    {
+        var workspace = new Workspace
+        {
+            Name = $"{user.FullName.Trim()}'s workspace",
+            OwnerId = user.Id,
+        };
+
+        var membership = new WorkspaceMember
+        {
+            WorkspaceId = workspace.Id,
+            UserId = user.Id,
+            Role = WorkspaceRole.Owner,
+        };
+
+        _context.Workspaces.Add(workspace);
+        _context.WorkspaceMembers.Add(membership);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
 }

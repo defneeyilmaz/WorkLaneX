@@ -8,6 +8,7 @@ using WorkLaneX.Application.Common.Settings;
 using WorkLaneX.Infrastructure.Auth;
 using WorkLaneX.Infrastructure.Identity;
 using WorkLaneX.Infrastructure.Persistence;
+using WorkLaneX.Infrastructure.Services;
 
 namespace WorkLaneX.Infrastructure;
 
@@ -23,6 +24,8 @@ public static class DependencyInjection
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IUserAccountService, UserAccountService>();
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
 
         services.AddDbContext<WorkLaneXDbContext>(options =>
             options.UseNpgsql(connectionString));

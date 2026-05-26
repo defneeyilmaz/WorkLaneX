@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { useAuth } from "@/components/auth-provider";
+import { WorkspacePanel } from "@/components/workspace-panel";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -36,26 +37,19 @@ export default function AppPage() {
         </Button>
       </header>
 
-      <main className="mx-auto w-full max-w-2xl flex-1 px-6 py-16">
+      <main className="mx-auto w-full max-w-2xl flex-1 space-y-6 px-6 py-16">
         <Card>
           <CardHeader>
-            <CardTitle>Workspace</CardTitle>
-            <CardDescription>
-              You are signed in. Projects and tasks will appear here in the
-              next phase.
-            </CardDescription>
+            <CardTitle>Signed in as {user?.fullName}</CardTitle>
+            <CardDescription>{user?.email}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p>
-              <span className="text-muted-foreground">Name:</span>{" "}
-              {user?.fullName}
-            </p>
-            <p>
-              <span className="text-muted-foreground">Email:</span>{" "}
-              {user?.email}
-            </p>
+          <CardContent className="text-sm text-muted-foreground">
+            Manage your workspaces below. New accounts get a default workspace
+            on registration.
           </CardContent>
         </Card>
+
+        <WorkspacePanel />
       </main>
     </div>
   );

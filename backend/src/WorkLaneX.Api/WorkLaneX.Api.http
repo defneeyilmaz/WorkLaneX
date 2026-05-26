@@ -25,3 +25,17 @@ Content-Type: application/json
 ### Me (replace token after login)
 GET {{WorkLaneX.Api_HostAddress}}/api/auth/me
 Authorization: Bearer {{token}}
+
+### List workspaces
+GET {{WorkLaneX.Api_HostAddress}}/api/workspaces
+Authorization: Bearer {{token}}
+
+### Create workspace
+POST {{WorkLaneX.Api_HostAddress}}/api/workspaces
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "Product team",
+  "description": "Main delivery workspace"
+}
