@@ -2,8 +2,10 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 import { useAuth } from "@/components/auth-provider";
+import { ProjectPanel } from "@/components/project-panel";
 import { WorkspacePanel } from "@/components/workspace-panel";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,10 +15,13 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { WorkspaceSummary } from "@/lib/workspaces";
 
 export default function AppPage() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [selectedWorkspace, setSelectedWorkspace] =
+    useState<WorkspaceSummary | null>(null);
 
   function handleLogout() {
     logout();
@@ -44,12 +49,22 @@ export default function AppPage() {
             <CardDescription>{user?.email}</CardDescription>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            Manage your workspaces below. New accounts get a default workspace
-            on registration.
+            Pick a workspace, then create projects inside it.
           </CardContent>
         </Card>
 
-        <WorkspacePanel />
+        <WorkspacePanel
+          selectedWorkspaceId={selectedWorkspace?.id ?? null}
+          onSelectWorkspace={setSelectedWorkspace}
+        />
+
+        {selectedWorkspace ? (
+          <ProjectPanel
+            key={selectedWorkspace.id}
+            workspaceId={selectedWorkspace.id}
+            workspaceName={selectedWorkspace.name}
+          />
+        ) : null}
       </main>
     </div>
   );

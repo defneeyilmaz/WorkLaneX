@@ -8,7 +8,10 @@ export type { AuthResponse, UserSummary } from "@/lib/auth-types";
 
 export function getAuthErrorMessage(error: unknown): string {
   if (axios.isAxiosError<AuthErrorBody>(error)) {
-    const data = error.response?.data;
+    if (!error.response) {
+      return "Cannot reach the API. Start the backend on port 5147.";
+    }
+    const data = error.response.data;
     if (data?.errors?.length) {
       return data.errors.join(" ");
     }

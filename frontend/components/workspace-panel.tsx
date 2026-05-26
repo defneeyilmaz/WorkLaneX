@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 import {
   createWorkspace,
   fetchMyWorkspaces,
@@ -20,7 +21,17 @@ import {
   type WorkspaceSummary,
 } from "@/lib/workspaces";
 
-export function WorkspacePanel() {
+const SELECTED_WORKSPACE_KEY = "worklanex_selected_workspace_id";
+
+type WorkspacePanelProps = {
+  selectedWorkspaceId: string | null;
+  onSelectWorkspace: (workspace: WorkspaceSummary) => void;
+};
+
+export function WorkspacePanel({
+  selectedWorkspaceId,
+  onSelectWorkspace,
+}: WorkspacePanelProps) {
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -34,16 +45,35 @@ export function WorkspacePanel() {
     try {
       const data = await fetchMyWorkspaces();
       setWorkspaces(data);
+
+      if (data.length === 0) {
+        return;
+      }
+
+      const storedId =
+        typeof window !== "undefined"
+          ? localStorage.getItem(SELECTED_WORKSPACE_KEY)
+          : null;
+      const stored = storedId
+        ? data.find((workspace) => workspace.id === storedId)
+        : undefined;
+      const selected = stored ?? data[0];
+      onSelectWorkspace(selected);
     } catch {
       setError("Could not load workspaces.");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [onSelectWorkspace]);
 
   useEffect(() => {
     loadWorkspaces();
   }, [loadWorkspaces]);
+
+  function handleSelect(workspace: WorkspaceSummary) {
+    localStorage.setItem(SELECTED_WORKSPACE_KEY, workspace.id);
+    onSelectWorkspace(workspace);
+  }
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -53,6 +83,7 @@ export function WorkspacePanel() {
     try {
       const created = await createWorkspace(name.trim(), description);
       setWorkspaces((current) => [created, ...current]);
+      handleSelect(created);
       setName("");
       setDescription("");
     } catch (err) {
@@ -68,7 +99,7 @@ export function WorkspacePanel() {
         <CardHeader>
           <CardTitle>Your workspaces</CardTitle>
           <CardDescription>
-            Teams and projects live inside a workspace.
+            Select a workspace to view and manage its projects.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -80,22 +111,33 @@ export function WorkspacePanel() {
             </p>
           ) : (
             <ul className="space-y-3">
-              {workspaces.map((workspace) => (
-                <li
-                  key={workspace.id}
-                  className="rounded-lg border border-border px-4 py-3"
-                >
-                  <p className="font-medium">{workspace.name}</p>
-                  {workspace.description ? (
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {workspace.description}
-                    </p>
-                  ) : null}
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {formatWorkspaceRole(workspace.role)}
-                  </p>
-                </li>
-              ))}
+              {workspaces.map((workspace) => {
+                const isSelected = workspace.id === selectedWorkspaceId;
+                return (
+                  <li key={workspace.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleSelect(workspace)}
+                      className={cn(
+                        "w-full rounded-lg border px-4 py-3 text-left transition-colors",
+                        isSelected
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:bg-muted/50",
+                      )}
+                    >
+                      <p className="font-medium">{workspace.name}</p>
+                      {workspace.description ? (
+                        <p className="mt-1 text-sm text-muted-foreground">
+                          {workspace.description}
+                        </p>
+                      ) : null}
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        {formatWorkspaceRole(workspace.role)}
+                      </p>
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </CardContent>

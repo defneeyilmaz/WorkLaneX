@@ -39,3 +39,18 @@ Content-Type: application/json
   "name": "Product team",
   "description": "Main delivery workspace"
 }
+
+### List projects in workspace (set workspaceId)
+@workspaceId = 00000000-0000-0000-0000-000000000000
+GET {{WorkLaneX.Api_HostAddress}}/api/workspaces/{{workspaceId}}/projects
+Authorization: Bearer {{token}}
+
+### Create project in workspace
+POST {{WorkLaneX.Api_HostAddress}}/api/workspaces/{{workspaceId}}/projects
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "MVP launch",
+  "description": "First release scope"
+}

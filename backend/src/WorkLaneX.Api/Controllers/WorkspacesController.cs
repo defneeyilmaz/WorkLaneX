@@ -2,6 +2,8 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WorkLaneX.Application.Features.Projects.Commands.CreateProject;
+using WorkLaneX.Application.Features.Projects.Queries.ListProjectsByWorkspace;
 using WorkLaneX.Application.Features.Workspaces.Commands.CreateWorkspace;
 using WorkLaneX.Application.Features.Workspaces.Queries.ListMyWorkspaces;
 
@@ -49,6 +51,56 @@ public class WorkspacesController : ControllerBase
             return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
         }
     }
+
+    [HttpGet("{workspaceId:guid}/projects")]
+    public async Task<IActionResult> ListProjects(
+        Guid workspaceId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new ListProjectsByWorkspaceQuery(workspaceId),
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return NotFound(new { error = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("{workspaceId:guid}/projects")]
+    public async Task<IActionResult> CreateProject(
+        Guid workspaceId,
+        [FromBody] CreateProjectRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _mediator.Send(
+                new CreateProjectCommand(workspaceId, request.Name, request.Description),
+                cancellationToken);
+
+            if (!result.Succeeded)
+            {
+                var status = result.Error?.Contains("access", StringComparison.OrdinalIgnoreCase) == true
+                    ? StatusCodes.Status404NotFound
+                    : StatusCodes.Status400BadRequest;
+                return StatusCode(status, new { error = result.Error });
+            }
+
+            return CreatedAtAction(
+                nameof(ListProjects),
+                new { workspaceId },
+                result.Value);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+        }
+    }
 }
 
 public record CreateWorkspaceRequest(string Name, string? Description);
+
+public record CreateProjectRequest(string Name, string? Description);
