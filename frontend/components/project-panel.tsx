@@ -22,9 +22,18 @@ import {
 type ProjectPanelProps = {
   workspaceId: string;
   workspaceName: string;
+  selectedProjectId: string | null;
+  onSelectProject: (project: ProjectSummary) => void;
 };
 
-export function ProjectPanel({ workspaceId, workspaceName }: ProjectPanelProps) {
+const SELECTED_PROJECT_KEY = "worklanex_selected_project_id";
+
+export function ProjectPanel({
+  workspaceId,
+  workspaceName,
+  selectedProjectId,
+  onSelectProject,
+}: ProjectPanelProps) {
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -38,12 +47,20 @@ export function ProjectPanel({ workspaceId, workspaceName }: ProjectPanelProps) 
     try {
       const data = await fetchWorkspaceProjects(workspaceId);
       setProjects(data);
+      if (data.length > 0) {
+        const storedId =
+          typeof window !== "undefined"
+            ? localStorage.getItem(SELECTED_PROJECT_KEY)
+            : null;
+        const selected = data.find((project) => project.id === storedId) ?? data[0];
+        onSelectProject(selected);
+      }
     } catch {
       setError("Could not load projects.");
     } finally {
       setIsLoading(false);
     }
-  }, [workspaceId]);
+  }, [onSelectProject, workspaceId]);
 
   useEffect(() => {
     loadProjects();
@@ -57,6 +74,8 @@ export function ProjectPanel({ workspaceId, workspaceName }: ProjectPanelProps) 
     try {
       const created = await createProject(workspaceId, name.trim(), description);
       setProjects((current) => [created, ...current]);
+      localStorage.setItem(SELECTED_PROJECT_KEY, created.id);
+      onSelectProject(created);
       setName("");
       setDescription("");
     } catch (err) {
@@ -64,6 +83,11 @@ export function ProjectPanel({ workspaceId, workspaceName }: ProjectPanelProps) 
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function handleSelect(project: ProjectSummary) {
+    localStorage.setItem(SELECTED_PROJECT_KEY, project.id);
+    onSelectProject(project);
   }
 
   return (
@@ -85,16 +109,23 @@ export function ProjectPanel({ workspaceId, workspaceName }: ProjectPanelProps) 
           ) : (
             <ul className="space-y-3">
               {projects.map((project) => (
-                <li
-                  key={project.id}
-                  className="rounded-lg border border-border px-4 py-3"
-                >
-                  <p className="font-medium">{project.name}</p>
-                  {project.description ? (
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {project.description}
-                    </p>
-                  ) : null}
+                <li key={project.id}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelect(project)}
+                    className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${
+                      project.id === selectedProjectId
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:bg-muted/50"
+                    }`}
+                  >
+                    <p className="font-medium">{project.name}</p>
+                    {project.description ? (
+                      <p className="mt-1 text-sm text-muted-foreground">
+                        {project.description}
+                      </p>
+                    ) : null}
+                  </button>
                 </li>
               ))}
             </ul>

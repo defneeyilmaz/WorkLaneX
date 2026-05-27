@@ -54,3 +54,29 @@ Content-Type: application/json
   "name": "MVP launch",
   "description": "First release scope"
 }
+
+### List tasks in project (set projectId)
+@projectId = 00000000-0000-0000-0000-000000000000
+GET {{WorkLaneX.Api_HostAddress}}/api/projects/{{projectId}}/tasks
+Authorization: Bearer {{token}}
+
+### Create task in project
+POST {{WorkLaneX.Api_HostAddress}}/api/projects/{{projectId}}/tasks
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Design onboarding flow",
+  "description": "Define first milestone UX",
+  "priority": "High"
+}
+
+### Update task status
+@taskId = 00000000-0000-0000-0000-000000000000
+PATCH {{WorkLaneX.Api_HostAddress}}/api/projects/tasks/{{taskId}}/status
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "status": "InProgress"
+}

@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { useAuth } from "@/components/auth-provider";
 import { ProjectPanel } from "@/components/project-panel";
+import { TaskBoard } from "@/components/task-board";
 import { WorkspacePanel } from "@/components/workspace-panel";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import type { ProjectSummary } from "@/lib/projects";
 import type { WorkspaceSummary } from "@/lib/workspaces";
 
 export default function AppPage() {
@@ -22,6 +24,7 @@ export default function AppPage() {
   const router = useRouter();
   const [selectedWorkspace, setSelectedWorkspace] =
     useState<WorkspaceSummary | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
 
   function handleLogout() {
     logout();
@@ -55,7 +58,10 @@ export default function AppPage() {
 
         <WorkspacePanel
           selectedWorkspaceId={selectedWorkspace?.id ?? null}
-          onSelectWorkspace={setSelectedWorkspace}
+          onSelectWorkspace={(workspace) => {
+            setSelectedWorkspace(workspace);
+            setSelectedProject(null);
+          }}
         />
 
         {selectedWorkspace ? (
@@ -63,6 +69,16 @@ export default function AppPage() {
             key={selectedWorkspace.id}
             workspaceId={selectedWorkspace.id}
             workspaceName={selectedWorkspace.name}
+            selectedProjectId={selectedProject?.id ?? null}
+            onSelectProject={setSelectedProject}
+          />
+        ) : null}
+
+        {selectedProject ? (
+          <TaskBoard
+            key={selectedProject.id}
+            projectId={selectedProject.id}
+            projectName={selectedProject.name}
           />
         ) : null}
       </main>
