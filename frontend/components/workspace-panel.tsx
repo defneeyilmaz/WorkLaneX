@@ -95,9 +95,9 @@ export function WorkspacePanel({
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="shadow-sm text-base">
         <CardHeader>
-          <CardTitle>Your workspaces</CardTitle>
+          <CardTitle className="text-2xl">Your workspaces</CardTitle>
           <CardDescription>
             Select a workspace to view and manage its projects.
           </CardDescription>
@@ -119,19 +119,19 @@ export function WorkspacePanel({
                       type="button"
                       onClick={() => handleSelect(workspace)}
                       className={cn(
-                        "w-full rounded-lg border px-4 py-3 text-left transition-colors",
+                        "w-full rounded-xl border px-4 py-3 text-left transition-all",
                         isSelected
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:bg-muted/50",
+                          ? "border-primary bg-primary/10 shadow-sm"
+                          : "border-border bg-background hover:border-primary/40 hover:bg-muted/40",
                       )}
                     >
-                      <p className="font-medium">{workspace.name}</p>
+                      <p className="text-lg font-medium">{workspace.name}</p>
                       {workspace.description ? (
-                        <p className="mt-1 text-sm text-muted-foreground">
+                        <p className="mt-1 text-base text-muted-foreground">
                           {workspace.description}
                         </p>
                       ) : null}
-                      <p className="mt-2 text-xs text-muted-foreground">
+                      <p className="mt-2 text-base text-muted-foreground">
                         {formatWorkspaceRole(workspace.role)}
                       </p>
                     </button>
@@ -143,9 +143,9 @@ export function WorkspacePanel({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="shadow-sm text-base">
         <CardHeader>
-          <CardTitle>Create workspace</CardTitle>
+          <CardTitle className="text-2xl">Create workspace</CardTitle>
           <CardDescription>
             Add another workspace for a team or side project.
           </CardDescription>
@@ -161,6 +161,7 @@ export function WorkspacePanel({
               <Label htmlFor="workspace-name">Name</Label>
               <Input
                 id="workspace-name"
+                className="h-11 text-base"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Product team"
@@ -174,6 +175,7 @@ export function WorkspacePanel({
               </Label>
               <Input
                 id="workspace-description"
+                className="h-11 text-base"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="What this workspace is for"

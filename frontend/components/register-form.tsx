@@ -43,9 +43,9 @@ export function RegisterForm() {
   }
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle>Create account</CardTitle>
+        <CardTitle className="text-xl">Create account</CardTitle>
         <CardDescription>
           Start with your name and work email. Password must be at least 8
           characters.
@@ -65,6 +65,7 @@ export function RegisterForm() {
               type="text"
               autoComplete="name"
               placeholder="Alex Morgan"
+              className="h-10 text-base"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
@@ -77,6 +78,7 @@ export function RegisterForm() {
               type="email"
               autoComplete="email"
               placeholder="you@team.com"
+              className="h-10 text-base"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -89,6 +91,7 @@ export function RegisterForm() {
               type="password"
               autoComplete="new-password"
               minLength={8}
+              className="h-10 text-base"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

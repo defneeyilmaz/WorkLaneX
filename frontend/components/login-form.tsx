@@ -42,9 +42,9 @@ export function LoginForm() {
   }
 
   return (
-    <Card>
+    <Card className="w-full">
       <CardHeader>
-        <CardTitle>Log in</CardTitle>
+        <CardTitle className="text-xl">Log in</CardTitle>
         <CardDescription>
           Use your work email and password to open your workspace.
         </CardDescription>
@@ -63,6 +63,7 @@ export function LoginForm() {
               type="email"
               autoComplete="email"
               placeholder="you@team.com"
+              className="h-10 text-base"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -74,6 +75,7 @@ export function LoginForm() {
               id="password"
               type="password"
               autoComplete="current-password"
+              className="h-10 text-base"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

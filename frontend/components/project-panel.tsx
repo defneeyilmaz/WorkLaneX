@@ -92,9 +92,9 @@ export function ProjectPanel({
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="shadow-sm text-base">
         <CardHeader>
-          <CardTitle>Projects in {workspaceName}</CardTitle>
+          <CardTitle className="text-2xl">Projects in {workspaceName}</CardTitle>
           <CardDescription>
             Kanban boards and tasks will attach to each project next.
           </CardDescription>
@@ -113,15 +113,15 @@ export function ProjectPanel({
                   <button
                     type="button"
                     onClick={() => handleSelect(project)}
-                    className={`w-full rounded-lg border px-4 py-3 text-left transition-colors ${
+                    className={`w-full rounded-xl border px-4 py-3 text-left transition-all ${
                       project.id === selectedProjectId
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:bg-muted/50"
+                        ? "border-primary bg-primary/10 shadow-sm"
+                        : "border-border bg-background hover:border-primary/40 hover:bg-muted/40"
                     }`}
                   >
-                    <p className="font-medium">{project.name}</p>
+                    <p className="text-lg font-medium">{project.name}</p>
                     {project.description ? (
-                      <p className="mt-1 text-sm text-muted-foreground">
+                      <p className="mt-1 text-base text-muted-foreground">
                         {project.description}
                       </p>
                     ) : null}
@@ -133,9 +133,9 @@ export function ProjectPanel({
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="shadow-sm text-base">
         <CardHeader>
-          <CardTitle>New project</CardTitle>
+          <CardTitle className="text-2xl">New project</CardTitle>
           <CardDescription>
             Add a project to organize work inside this workspace.
           </CardDescription>
@@ -151,6 +151,7 @@ export function ProjectPanel({
               <Label htmlFor="project-name">Name</Label>
               <Input
                 id="project-name"
+                className="h-11 text-base"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="MVP launch"
@@ -162,6 +163,7 @@ export function ProjectPanel({
               <Label htmlFor="project-description">Description (optional)</Label>
               <Input
                 id="project-description"
+                className="h-11 text-base"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="What this project delivers"

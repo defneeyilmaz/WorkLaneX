@@ -20,10 +20,10 @@ export function AuthPageShell({
         </Link>
       </header>
 
-      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-6 py-16">
-        <div className="mb-6 space-y-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-          <p className="text-sm text-muted-foreground">{description}</p>
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-16 md:py-20">
+        <div className="mb-8 space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
+          <p className="text-base text-muted-foreground">{description}</p>
         </div>
         {children}
       </main>

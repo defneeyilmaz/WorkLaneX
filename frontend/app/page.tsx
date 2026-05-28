@@ -23,10 +23,12 @@ export default function Home() {
         </Link>
       </header>
 
-      <main className="mx-auto flex w-full max-w-lg flex-1 flex-col justify-center px-6 py-16">
+      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-16 md:py-20">
         <Card>
           <CardHeader>
-            <CardTitle>Team workspace for shipping together</CardTitle>
+            <CardTitle className="text-2xl md:text-3xl">
+              Team workspace for shipping together
+            </CardTitle>
             <CardDescription>
               Tasks, docs, and updates in one place for small software teams and
               project groups.

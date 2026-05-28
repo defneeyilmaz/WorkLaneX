@@ -99,33 +99,50 @@ export function TaskBoard({ projectId, projectName }: TaskBoardProps) {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="shadow-sm text-base">
         <CardHeader>
-          <CardTitle>Tasks in {projectName}</CardTitle>
-          <CardDescription>Basic Kanban flow for this project.</CardDescription>
+          <CardTitle className="text-2xl">Tasks in {projectName}</CardTitle>
+          <CardDescription>
+            Board-style status lanes for this project.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Loading tasks…</p>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 xl:grid-cols-4 md:grid-cols-2">
               {STATUSES.map((status) => (
-                <div key={status} className="rounded-lg border border-border p-3">
-                  <p className="mb-2 text-sm font-medium">{STATUS_LABELS[status]}</p>
+                <div
+                  key={status}
+                  className="rounded-xl border border-border bg-muted/30 p-3"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <p className="text-base font-semibold">{STATUS_LABELS[status]}</p>
+                    <span className="rounded-full bg-background px-2 py-0.5 text-base text-muted-foreground">
+                      {groupedTasks[status].length}
+                    </span>
+                  </div>
                   {groupedTasks[status].length === 0 ? (
-                    <p className="text-xs text-muted-foreground">No tasks.</p>
+                    <p className="rounded-md border border-dashed border-border bg-background/80 px-2 py-3 text-base text-muted-foreground">
+                      No tasks in this lane.
+                    </p>
                   ) : (
                     <ul className="space-y-2">
                       {groupedTasks[status].map((task) => (
-                        <li key={task.id} className="rounded-md border border-border p-2">
-                          <p className="text-sm font-medium">{task.title}</p>
+                        <li
+                          key={task.id}
+                          className="rounded-lg border border-border bg-background p-3 shadow-sm"
+                        >
+                          <p className="text-base font-medium">{task.title}</p>
                           {task.description ? (
-                            <p className="text-xs text-muted-foreground">{task.description}</p>
+                            <p className="mt-1 text-base text-muted-foreground">
+                              {task.description}
+                            </p>
                           ) : null}
                           <div className="mt-2 flex items-center justify-between gap-2">
-                            <span className="text-xs text-muted-foreground">{task.priority}</span>
+                            <span className="text-base text-muted-foreground">{task.priority}</span>
                             <select
-                              className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+                              className="rounded-md border border-input bg-background px-2 py-1 text-base"
                               value={task.status}
                               onChange={(e) =>
                                 handleMoveTask(task.id, e.target.value as TaskStatus)
@@ -149,9 +166,9 @@ export function TaskBoard({ projectId, projectName }: TaskBoardProps) {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="shadow-sm text-base">
         <CardHeader>
-          <CardTitle>New task</CardTitle>
+          <CardTitle className="text-2xl">New task</CardTitle>
           <CardDescription>Add a task to the selected project.</CardDescription>
         </CardHeader>
         <form onSubmit={handleCreateTask}>
@@ -165,6 +182,7 @@ export function TaskBoard({ projectId, projectName }: TaskBoardProps) {
               <Label htmlFor="task-title">Title</Label>
               <Input
                 id="task-title"
+                className="h-11 text-base"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Design onboarding flow"
@@ -176,6 +194,7 @@ export function TaskBoard({ projectId, projectName }: TaskBoardProps) {
               <Label htmlFor="task-description">Description (optional)</Label>
               <Input
                 id="task-description"
+                className="h-11 text-base"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Detail for this task"
@@ -186,7 +205,7 @@ export function TaskBoard({ projectId, projectName }: TaskBoardProps) {
               <Label htmlFor="task-priority">Priority</Label>
               <select
                 id="task-priority"
-                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                className="h-11 w-full rounded-md border border-input bg-background px-3 text-base"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as TaskPriority)}
               >
