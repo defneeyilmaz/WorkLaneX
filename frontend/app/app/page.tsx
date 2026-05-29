@@ -16,6 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import type { ProjectSummary } from "@/lib/projects";
 import type { WorkspaceSummary } from "@/lib/workspaces";
 
@@ -24,7 +25,9 @@ export default function AppPage() {
   const router = useRouter();
   const [selectedWorkspace, setSelectedWorkspace] =
     useState<WorkspaceSummary | null>(null);
-  const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectSummary | null>(
+    null,
+  );
 
   function handleLogout() {
     logout();
@@ -36,12 +39,18 @@ export default function AppPage() {
     setSelectedProject(null);
   }, []);
 
+  const boardStep = selectedProject
+    ? "tasks"
+    : selectedWorkspace
+      ? "project"
+      : "workspace";
+
   return (
-    <div className="flex min-h-full flex-col">
-      <header className="flex items-center justify-between border-b border-border px-6 py-5">
+    <div className="app-modern-shell flex min-h-full flex-col">
+      <header className="glass-header sticky top-0 z-10 flex items-center justify-between px-6 py-4 md:px-8">
         <Link
           href="/"
-          className="text-xl font-semibold tracking-tight hover:opacity-80"
+          className="text-xl font-semibold tracking-tight transition-opacity hover:opacity-80"
         >
           WorkLaneX
         </Link>
@@ -50,15 +59,19 @@ export default function AppPage() {
         </Button>
       </header>
 
-      <main className="mx-auto w-full max-w-[1440px] flex-1 px-6 py-8 md:py-10">
-        <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
+      <main className="mx-auto w-full max-w-[1440px] flex-1 px-6 py-8 md:px-8 md:py-10">
+        <div className="grid gap-6 xl:grid-cols-[340px_minmax(0,1fr)]">
           <aside className="space-y-6">
-            <Card className="border-primary/20 bg-gradient-to-b from-primary/10 to-background shadow-sm">
+            <Card className="glass-card border-none py-5">
               <CardHeader>
-                <CardTitle className="text-2xl">Signed in as {user?.fullName}</CardTitle>
-                <CardDescription>{user?.email}</CardDescription>
+                <CardTitle className="text-2xl font-semibold">
+                  Signed in as {user?.fullName}
+                </CardTitle>
+                <CardDescription className="text-base">
+                  {user?.email}
+                </CardDescription>
               </CardHeader>
-              <CardContent className="text-lg text-muted-foreground">
+              <CardContent className="text-base text-muted-foreground">
                 Select a workspace on the left, then manage projects and tasks
                 in the board area.
               </CardContent>
@@ -71,24 +84,38 @@ export default function AppPage() {
           </aside>
 
           <section className="space-y-6">
-            <Card className="shadow-sm">
+            <Card className="glass-card border-none py-5">
               <CardHeader className="gap-4 md:flex md:flex-row md:items-end md:justify-between">
                 <div className="space-y-1">
-                  <CardTitle className="text-2xl md:text-3xl">Board</CardTitle>
-                  <CardDescription>
-                    Workspace, project, and task flow in one screen.
+                  <CardTitle className="text-2xl font-semibold md:text-3xl">
+                    Board
+                  </CardTitle>
+                  <CardDescription className="text-base">
+                    {selectedProject
+                      ? `Working in ${selectedProject.name}`
+                      : selectedWorkspace
+                        ? `Workspace: ${selectedWorkspace.name}`
+                        : "Workspace, project, and task flow in one screen."}
                   </CardDescription>
                 </div>
-                <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                  <span className="rounded-full border border-border bg-muted px-3 py-1">
-                    Workspace
-                  </span>
-                  <span className="rounded-full border border-border bg-muted px-3 py-1">
-                    Project
-                  </span>
-                  <span className="rounded-full border border-border bg-muted px-3 py-1">
-                    Tasks
-                  </span>
+                <div className="flex flex-wrap gap-2">
+                  {(
+                    [
+                      { id: "workspace", label: "Workspace" },
+                      { id: "project", label: "Project" },
+                      { id: "tasks", label: "Tasks" },
+                    ] as const
+                  ).map((chip) => (
+                    <span
+                      key={chip.id}
+                      className={cn(
+                        "board-chip",
+                        boardStep === chip.id && "board-chip-active",
+                      )}
+                    >
+                      {chip.label}
+                    </span>
+                  ))}
                 </div>
               </CardHeader>
             </Card>
@@ -102,10 +129,10 @@ export default function AppPage() {
                 onSelectProject={setSelectedProject}
               />
             ) : (
-              <Card>
+              <Card className="glass-card border-none py-5">
                 <CardHeader>
-                  <CardTitle>Select a workspace</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-xl">Select a workspace</CardTitle>
+                  <CardDescription className="text-base">
                     Choose a workspace to view and create projects.
                   </CardDescription>
                 </CardHeader>
@@ -119,10 +146,10 @@ export default function AppPage() {
                 projectName={selectedProject.name}
               />
             ) : (
-              <Card>
+              <Card className="glass-card border-none py-5">
                 <CardHeader>
-                  <CardTitle>Select a project</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-xl">Select a project</CardTitle>
+                  <CardDescription className="text-base">
                     Pick a project to open its task board.
                   </CardDescription>
                 </CardHeader>

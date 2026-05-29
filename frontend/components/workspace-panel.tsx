@@ -95,18 +95,18 @@ export function WorkspacePanel({
 
   return (
     <div className="space-y-6">
-      <Card className="shadow-sm text-base">
+      <Card className="glass-card border-none py-5 text-base">
         <CardHeader>
-          <CardTitle className="text-2xl">Your workspaces</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-semibold">Your workspaces</CardTitle>
+          <CardDescription className="text-base">
             Select a workspace to view and manage its projects.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading workspaces…</p>
+            <p className="text-base text-muted-foreground">Loading workspaces…</p>
           ) : workspaces.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="rounded-xl border border-dashed border-white/70 bg-white/40 px-4 py-6 text-center text-base text-muted-foreground">
               No workspaces yet. Create one below.
             </p>
           ) : (
@@ -119,10 +119,8 @@ export function WorkspacePanel({
                       type="button"
                       onClick={() => handleSelect(workspace)}
                       className={cn(
-                        "w-full rounded-xl border px-4 py-3 text-left transition-all",
-                        isSelected
-                          ? "border-primary bg-primary/10 shadow-sm"
-                          : "border-border bg-background hover:border-primary/40 hover:bg-muted/40",
+                        "selectable-item",
+                        isSelected && "selectable-item-active",
                       )}
                     >
                       <p className="text-lg font-medium">{workspace.name}</p>
@@ -131,7 +129,7 @@ export function WorkspacePanel({
                           {workspace.description}
                         </p>
                       ) : null}
-                      <p className="mt-2 text-base text-muted-foreground">
+                      <p className="mt-2 text-sm font-medium text-muted-foreground">
                         {formatWorkspaceRole(workspace.role)}
                       </p>
                     </button>
@@ -143,7 +141,7 @@ export function WorkspacePanel({
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm text-base">
+      <Card className="glass-card border-none py-5 text-base">
         <CardHeader>
           <CardTitle className="text-2xl">Create workspace</CardTitle>
           <CardDescription>
@@ -183,7 +181,7 @@ export function WorkspacePanel({
               />
             </div>
           </CardContent>
-          <div className="flex items-center rounded-b-xl border-t bg-muted/50 p-4">
+          <div className="flex items-center rounded-b-2xl border-t border-white/50 bg-white/40 p-4">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Creating…" : "Create workspace"}
             </Button>

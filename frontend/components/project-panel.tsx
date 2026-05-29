@@ -18,6 +18,7 @@ import {
   getProjectErrorMessage,
   type ProjectSummary,
 } from "@/lib/projects";
+import { cn } from "@/lib/utils";
 
 type ProjectPanelProps = {
   workspaceId: string;
@@ -92,18 +93,20 @@ export function ProjectPanel({
 
   return (
     <div className="space-y-6">
-      <Card className="shadow-sm text-base">
+      <Card className="glass-card border-none py-5 text-base">
         <CardHeader>
-          <CardTitle className="text-2xl">Projects in {workspaceName}</CardTitle>
-          <CardDescription>
-            Kanban boards and tasks will attach to each project next.
+          <CardTitle className="text-2xl font-semibold">
+            Projects in {workspaceName}
+          </CardTitle>
+          <CardDescription className="text-base">
+            Pick a project to open its kanban board.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading projects…</p>
+            <p className="text-base text-muted-foreground">Loading projects…</p>
           ) : projects.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="rounded-xl border border-dashed border-white/70 bg-white/40 px-4 py-6 text-center text-base text-muted-foreground">
               No projects yet. Create one below.
             </p>
           ) : (
@@ -113,11 +116,10 @@ export function ProjectPanel({
                   <button
                     type="button"
                     onClick={() => handleSelect(project)}
-                    className={`w-full rounded-xl border px-4 py-3 text-left transition-all ${
-                      project.id === selectedProjectId
-                        ? "border-primary bg-primary/10 shadow-sm"
-                        : "border-border bg-background hover:border-primary/40 hover:bg-muted/40"
-                    }`}
+                    className={cn(
+                      "selectable-item",
+                      project.id === selectedProjectId && "selectable-item-active",
+                    )}
                   >
                     <p className="text-lg font-medium">{project.name}</p>
                     {project.description ? (
@@ -133,7 +135,7 @@ export function ProjectPanel({
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm text-base">
+      <Card className="glass-card border-none py-5 text-base">
         <CardHeader>
           <CardTitle className="text-2xl">New project</CardTitle>
           <CardDescription>
@@ -171,7 +173,7 @@ export function ProjectPanel({
               />
             </div>
           </CardContent>
-          <div className="flex items-center rounded-b-xl border-t bg-muted/50 p-4">
+          <div className="flex items-center rounded-b-2xl border-t border-white/50 bg-white/40 p-4">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Creating…" : "Create project"}
             </Button>

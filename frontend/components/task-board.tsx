@@ -21,6 +21,7 @@ import {
   type TaskSummary,
   updateTaskStatus,
 } from "@/lib/tasks";
+import { cn } from "@/lib/utils";
 
 type TaskBoardProps = {
   projectId: string;
@@ -33,6 +34,20 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
   InProgress: "In Progress",
   Review: "Review",
   Done: "Done",
+};
+
+const LANE_CLASSES: Record<TaskStatus, string> = {
+  ToDo: "kanban-lane-todo",
+  InProgress: "kanban-lane-progress",
+  Review: "kanban-lane-review",
+  Done: "kanban-lane-done",
+};
+
+const PRIORITY_CLASSES: Record<TaskPriority, string> = {
+  Low: "bg-slate-100 text-slate-700",
+  Medium: "bg-sky-100 text-sky-800",
+  High: "bg-amber-100 text-amber-900",
+  Urgent: "bg-rose-100 text-rose-900",
 };
 
 export function TaskBoard({ projectId, projectName }: TaskBoardProps) {
@@ -99,50 +114,54 @@ export function TaskBoard({ projectId, projectName }: TaskBoardProps) {
 
   return (
     <div className="space-y-6">
-      <Card className="shadow-sm text-base">
+      <Card className="glass-card border-none py-5 text-base">
         <CardHeader>
-          <CardTitle className="text-2xl">Tasks in {projectName}</CardTitle>
-          <CardDescription>
-            Board-style status lanes for this project.
+          <CardTitle className="text-2xl font-semibold">
+            Tasks in {projectName}
+          </CardTitle>
+          <CardDescription className="text-base">
+            Drag-free lanes with quick status updates for now.
           </CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading tasks…</p>
+            <p className="text-base text-muted-foreground">Loading tasks…</p>
           ) : (
-            <div className="grid gap-4 xl:grid-cols-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {STATUSES.map((status) => (
                 <div
                   key={status}
-                  className="rounded-xl border border-border bg-muted/30 p-3"
+                  className={cn("kanban-lane", LANE_CLASSES[status])}
                 >
-                  <div className="mb-2 flex items-center justify-between">
+                  <div className="mb-3 flex items-center justify-between gap-2">
                     <p className="text-base font-semibold">{STATUS_LABELS[status]}</p>
-                    <span className="rounded-full bg-background px-2 py-0.5 text-base text-muted-foreground">
-                      {groupedTasks[status].length}
-                    </span>
+                    <span className="lane-badge">{groupedTasks[status].length}</span>
                   </div>
                   {groupedTasks[status].length === 0 ? (
-                    <p className="rounded-md border border-dashed border-border bg-background/80 px-2 py-3 text-base text-muted-foreground">
-                      No tasks in this lane.
+                    <p className="rounded-xl border border-dashed border-white/80 bg-white/50 px-3 py-5 text-center text-sm text-muted-foreground">
+                      Drop tasks here later — lane is empty for now.
                     </p>
                   ) : (
                     <ul className="space-y-2">
                       {groupedTasks[status].map((task) => (
-                        <li
-                          key={task.id}
-                          className="rounded-lg border border-border bg-background p-3 shadow-sm"
-                        >
+                        <li key={task.id} className="task-card">
                           <p className="text-base font-medium">{task.title}</p>
                           {task.description ? (
-                            <p className="mt-1 text-base text-muted-foreground">
+                            <p className="mt-1 text-sm text-muted-foreground">
                               {task.description}
                             </p>
                           ) : null}
-                          <div className="mt-2 flex items-center justify-between gap-2">
-                            <span className="text-base text-muted-foreground">{task.priority}</span>
+                          <div className="mt-3 flex items-center justify-between gap-2">
+                            <span
+                              className={cn(
+                                "rounded-full px-2 py-0.5 text-xs font-semibold",
+                                PRIORITY_CLASSES[task.priority],
+                              )}
+                            >
+                              {task.priority}
+                            </span>
                             <select
-                              className="rounded-md border border-input bg-background px-2 py-1 text-base"
+                              className="rounded-lg border border-white/80 bg-white/90 px-2 py-1 text-sm shadow-sm transition-colors hover:border-[var(--board-accent)]/40"
                               value={task.status}
                               onChange={(e) =>
                                 handleMoveTask(task.id, e.target.value as TaskStatus)
@@ -166,7 +185,7 @@ export function TaskBoard({ projectId, projectName }: TaskBoardProps) {
         </CardContent>
       </Card>
 
-      <Card className="shadow-sm text-base">
+      <Card className="glass-card border-none py-5 text-base">
         <CardHeader>
           <CardTitle className="text-2xl">New task</CardTitle>
           <CardDescription>Add a task to the selected project.</CardDescription>
@@ -216,7 +235,7 @@ export function TaskBoard({ projectId, projectName }: TaskBoardProps) {
               </select>
             </div>
           </CardContent>
-          <div className="flex items-center rounded-b-xl border-t bg-muted/50 p-4">
+          <div className="flex items-center rounded-b-2xl border-t border-white/50 bg-white/40 p-4">
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? "Creating…" : "Create task"}
             </Button>
