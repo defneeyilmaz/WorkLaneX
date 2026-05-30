@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkLaneX.Application.Features.Tasks.Commands.CreateTask;
+using WorkLaneX.Application.Features.Tasks.Commands.UpdateTask;
 using WorkLaneX.Application.Features.Tasks.Commands.UpdateTaskStatus;
 using WorkLaneX.Application.Features.Tasks.Queries.ListTasksByProject;
 using WorkLaneX.Domain.Enums;
@@ -80,7 +81,42 @@ public class ProjectsController : ControllerBase
 
         return Ok(result.Value);
     }
+
+    [HttpPatch("tasks/{taskId:guid}")]
+    public async Task<IActionResult> UpdateTask(
+        Guid taskId,
+        [FromBody] UpdateTaskRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _mediator.Send(
+                new UpdateTaskCommand(
+                    taskId,
+                    request.Title,
+                    request.Description,
+                    request.Priority,
+                    request.Status),
+                cancellationToken);
+
+            if (!result.Succeeded)
+            {
+                return NotFound(new { error = result.Error });
+            }
+
+            return Ok(result.Value);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+        }
+    }
 }
 
 public record CreateTaskRequest(string Title, string? Description, TaskPriority Priority = TaskPriority.Medium);
 public record UpdateTaskStatusRequest(TaskStatusEnum Status);
+public record UpdateTaskRequest(
+    string Title,
+    string? Description,
+    TaskPriority Priority,
+    TaskStatusEnum Status);

@@ -195,4 +195,24 @@
   .lane-badge {
     @apply rounded-full bg-white/90 px-2.5 py-0.5 text-sm font-semibold text-foreground shadow-sm;
   }
+
+  .kanban-lane-drop-active {
+    @apply ring-2 ring-[var(--board-accent)]/40 shadow-lg;
+  }
+
+  .task-card-dragging {
+    @apply opacity-40;
+  }
+
+  .task-card-overlay {
+    @apply cursor-grabbing shadow-xl ring-2 ring-[var(--board-accent)]/30;
+  }
+
+  .task-detail-drawer {
+    @apply fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-white/60 bg-white/90 shadow-2xl backdrop-blur-xl;
+  }
+
+  .task-detail-backdrop {
+    @apply fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px];
+  }
 }

@@ -44,6 +44,26 @@ export async function updateTaskStatus(
   return data;
 }
 
+export type UpdateTaskInput = {
+  title: string;
+  description: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+};
+
+export async function updateTask(
+  taskId: string,
+  input: UpdateTaskInput,
+): Promise<TaskSummary> {
+  const { data } = await api.patch<TaskSummary>(`/api/projects/tasks/${taskId}`, {
+    title: input.title.trim(),
+    description: input.description.trim() || null,
+    priority: input.priority,
+    status: input.status,
+  });
+  return data;
+}
+
 export function getTaskErrorMessage(error: unknown): string {
   if (axios.isAxiosError<{ error?: string; errors?: string[] }>(error)) {
     const data = error.response?.data;
