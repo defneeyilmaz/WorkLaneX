@@ -19,10 +19,13 @@ import {
   type ProjectSummary,
 } from "@/lib/projects";
 import { cn } from "@/lib/utils";
+import { canCreateProject, normalizeWorkspaceRole } from "@/lib/permissions";
+import type { WorkspaceRole } from "@/lib/workspaces";
 
 type ProjectPanelProps = {
   workspaceId: string;
   workspaceName: string;
+  workspaceRole: WorkspaceRole;
   selectedProjectId: string | null;
   onSelectProject: (project: ProjectSummary) => void;
 };
@@ -32,6 +35,7 @@ const SELECTED_PROJECT_KEY = "worklanex_selected_project_id";
 export function ProjectPanel({
   workspaceId,
   workspaceName,
+  workspaceRole,
   selectedProjectId,
   onSelectProject,
 }: ProjectPanelProps) {
@@ -41,6 +45,8 @@ export function ProjectPanel({
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const role = normalizeWorkspaceRole(workspaceRole);
+  const showCreateForm = canCreateProject(role);
 
   const loadProjects = useCallback(async () => {
     setIsLoading(true);
@@ -135,6 +141,7 @@ export function ProjectPanel({
         </CardContent>
       </Card>
 
+      {showCreateForm ? (
       <Card className="glass-card border-none py-5 text-base">
         <CardHeader>
           <CardTitle className="text-2xl">New project</CardTitle>
@@ -180,6 +187,7 @@ export function ProjectPanel({
           </div>
         </form>
       </Card>
+      ) : null}
     </div>
   );
 }
