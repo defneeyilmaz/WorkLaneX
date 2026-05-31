@@ -2,7 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using WorkLaneX.Application.Common.Interfaces;
 using WorkLaneX.Application.Common.Models;
-using WorkLaneX.Domain.Entities;
+using WorkLaneX.Domain.Enums;
 
 namespace WorkLaneX.Application.Features.Projects.Commands.CreateProject;
 
@@ -11,13 +11,16 @@ public class CreateProjectCommandHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
+    private readonly IWorkspaceAuthorizationService _authorization;
 
     public CreateProjectCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUser)
+        ICurrentUserService currentUser,
+        IWorkspaceAuthorizationService authorization)
     {
         _context = context;
         _currentUser = currentUser;
+        _authorization = authorization;
     }
 
     public async Task<OperationResult<ProjectSummary>> Handle(
@@ -30,17 +33,18 @@ public class CreateProjectCommandHandler
             return OperationResult<ProjectSummary>.Failure("You must be signed in.");
         }
 
-        var hasAccess = await _context.WorkspaceMembers.AnyAsync(
-            m => m.WorkspaceId == request.WorkspaceId && m.UserId == userId.Value,
+        var membership = await _authorization.GetMembershipAsync(
+            request.WorkspaceId,
+            userId.Value,
             cancellationToken);
 
-        if (!hasAccess)
+        if (membership is null || !_authorization.CanManageProjects(membership.Role))
         {
             return OperationResult<ProjectSummary>.Failure(
-                "Workspace not found or you do not have access.");
+                "You do not have permission to create projects.");
         }
 
-        var project = new Project
+        var project = new Domain.Entities.Project
         {
             WorkspaceId = request.WorkspaceId,
             Name = request.Name.Trim(),

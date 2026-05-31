@@ -10,4 +10,6 @@ public record UpdateTaskCommand(
     string Title,
     string? Description,
     TaskPriority Priority,
-    TaskStatusEnum Status) : IRequest<OperationResult<TaskSummary>>;
+    TaskStatusEnum Status,
+    Guid? AssigneeId,
+    string? CompletionNote = null) : IRequest<OperationResult<TaskSummary>>;

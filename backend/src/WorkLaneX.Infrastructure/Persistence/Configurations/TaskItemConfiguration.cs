@@ -27,6 +27,17 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
             .HasConversion<string>()
             .HasMaxLength(32);
 
+        builder.Property(t => t.ApprovalStatus)
+            .HasConversion<string>()
+            .HasMaxLength(32);
+
+        builder.Property(t => t.CompletionNote)
+            .HasMaxLength(2000);
+
+        builder.Property(t => t.RejectionNote)
+            .HasMaxLength(2000);
+
         builder.HasIndex(t => new { t.ProjectId, t.Status });
+        builder.HasIndex(t => t.AssigneeId);
     }
 }

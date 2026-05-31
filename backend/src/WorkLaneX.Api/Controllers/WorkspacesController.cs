@@ -4,8 +4,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkLaneX.Application.Features.Projects.Commands.CreateProject;
 using WorkLaneX.Application.Features.Projects.Queries.ListProjectsByWorkspace;
+using WorkLaneX.Application.Features.Workspaces.Commands.AddWorkspaceMember;
 using WorkLaneX.Application.Features.Workspaces.Commands.CreateWorkspace;
 using WorkLaneX.Application.Features.Workspaces.Queries.ListMyWorkspaces;
+using WorkLaneX.Application.Features.Workspaces.Queries.ListWorkspaceMembers;
+using WorkLaneX.Domain.Enums;
 
 namespace WorkLaneX.Api.Controllers;
 
@@ -83,9 +86,11 @@ public class WorkspacesController : ControllerBase
 
             if (!result.Succeeded)
             {
-                var status = result.Error?.Contains("access", StringComparison.OrdinalIgnoreCase) == true
-                    ? StatusCodes.Status404NotFound
-                    : StatusCodes.Status400BadRequest;
+                var status = result.Error?.Contains("permission", StringComparison.OrdinalIgnoreCase) == true
+                    ? StatusCodes.Status403Forbidden
+                    : result.Error?.Contains("access", StringComparison.OrdinalIgnoreCase) == true
+                        ? StatusCodes.Status404NotFound
+                        : StatusCodes.Status400BadRequest;
                 return StatusCode(status, new { error = result.Error });
             }
 
@@ -99,8 +104,58 @@ public class WorkspacesController : ControllerBase
             return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
         }
     }
+
+    [HttpGet("{workspaceId:guid}/members")]
+    public async Task<IActionResult> ListMembers(
+        Guid workspaceId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new ListWorkspaceMembersQuery(workspaceId),
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            var status = result.Error?.Contains("permission", StringComparison.OrdinalIgnoreCase) == true
+                ? StatusCodes.Status403Forbidden
+                : StatusCodes.Status404NotFound;
+            return StatusCode(status, new { error = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("{workspaceId:guid}/members")]
+    public async Task<IActionResult> AddMember(
+        Guid workspaceId,
+        [FromBody] AddWorkspaceMemberRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _mediator.Send(
+                new AddWorkspaceMemberCommand(workspaceId, request.Email, request.Role),
+                cancellationToken);
+
+            if (!result.Succeeded)
+            {
+                var status = result.Error?.Contains("permission", StringComparison.OrdinalIgnoreCase) == true
+                    ? StatusCodes.Status403Forbidden
+                    : StatusCodes.Status400BadRequest;
+                return StatusCode(status, new { error = result.Error });
+            }
+
+            return CreatedAtAction(nameof(ListMembers), new { workspaceId }, result.Value);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+        }
+    }
 }
 
 public record CreateWorkspaceRequest(string Name, string? Description);
 
 public record CreateProjectRequest(string Name, string? Description);
+
+public record AddWorkspaceMemberRequest(string Email, WorkspaceRole Role = WorkspaceRole.Member);

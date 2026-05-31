@@ -1,7 +1,11 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using WorkLaneX.Application.Common.Interfaces;
+using WorkLaneX.Application.Common.Mapping;
 using WorkLaneX.Application.Common.Models;
+using WorkLaneX.Domain.Entities;
+using WorkLaneX.Domain.Enums;
+using TaskStatusEnum = WorkLaneX.Domain.Enums.TaskStatus;
 
 namespace WorkLaneX.Application.Features.Tasks.Commands.UpdateTask;
 
@@ -10,13 +14,19 @@ public class UpdateTaskCommandHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
+    private readonly IWorkspaceAuthorizationService _authorization;
+    private readonly IUserDirectory _userDirectory;
 
     public UpdateTaskCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUser)
+        ICurrentUserService currentUser,
+        IWorkspaceAuthorizationService authorization,
+        IUserDirectory userDirectory)
     {
         _context = context;
         _currentUser = currentUser;
+        _authorization = authorization;
+        _userDirectory = userDirectory;
     }
 
     public async Task<OperationResult<TaskSummary>> Handle(
@@ -37,16 +47,54 @@ public class UpdateTaskCommandHandler
             return OperationResult<TaskSummary>.Failure("Task not found.");
         }
 
-        var hasAccess = await _context.Projects
-            .AnyAsync(
-                p => p.Id == task.ProjectId &&
-                     p.Workspace.Members.Any(m => m.UserId == userId.Value),
-                cancellationToken);
+        var project = await _context.Projects
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == task.ProjectId, cancellationToken);
 
-        if (!hasAccess)
+        if (project is null)
+        {
+            return OperationResult<TaskSummary>.Failure("Task not found.");
+        }
+
+        var membership = await _authorization.GetMembershipAsync(
+            project.WorkspaceId,
+            userId.Value,
+            cancellationToken);
+
+        if (membership is null)
         {
             return OperationResult<TaskSummary>.Failure(
                 "Task not found or you do not have access.");
+        }
+
+        if (membership.Role == WorkspaceRole.Member)
+        {
+            return await HandleMemberUpdate(
+                task,
+                membership,
+                userId.Value,
+                request,
+                cancellationToken);
+        }
+
+        if (!_authorization.CanManageTasks(membership.Role))
+        {
+            return OperationResult<TaskSummary>.Failure(
+                "You do not have permission to update tasks.");
+        }
+
+        if (request.AssigneeId is Guid assigneeId)
+        {
+            var assigneeMember = await _authorization.GetMembershipAsync(
+                project.WorkspaceId,
+                assigneeId,
+                cancellationToken);
+
+            if (assigneeMember is null)
+            {
+                return OperationResult<TaskSummary>.Failure(
+                    "Assignee must be a member of this workspace.");
+            }
         }
 
         task.Title = request.Title.Trim();
@@ -55,17 +103,72 @@ public class UpdateTaskCommandHandler
             : request.Description.Trim();
         task.Priority = request.Priority;
         task.Status = request.Status;
+        task.AssigneeId = request.AssigneeId;
+
+        if (request.Status != TaskStatusEnum.Done)
+        {
+            task.ApprovalStatus = TaskApprovalStatus.None;
+            task.CompletionNote = null;
+            task.RejectionNote = null;
+            task.ApprovedAt = null;
+            task.ApprovedById = null;
+        }
+
         task.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
 
+        return await BuildSummaryAsync(task, cancellationToken);
+    }
+
+    private async Task<OperationResult<TaskSummary>> HandleMemberUpdate(
+        TaskItem task,
+        WorkspaceMember membership,
+        Guid userId,
+        UpdateTaskCommand request,
+        CancellationToken cancellationToken)
+    {
+        if (!_authorization.CanMemberModifyTask(task, userId))
+        {
+            return OperationResult<TaskSummary>.Failure(
+                "You can only update tasks assigned to you.");
+        }
+
+        if (!_authorization.IsForwardStatusTransition(task.Status, request.Status))
+        {
+            return OperationResult<TaskSummary>.Failure(
+                "You can only move a task forward to a later status.");
+        }
+
+        task.Status = request.Status;
+        task.UpdatedAt = DateTime.UtcNow;
+
+        if (request.Status == TaskStatusEnum.Done)
+        {
+            task.ApprovalStatus = TaskApprovalStatus.Pending;
+            task.CompletionNote = string.IsNullOrWhiteSpace(request.CompletionNote)
+                ? null
+                : request.CompletionNote.Trim();
+            task.RejectionNote = null;
+            task.ApprovedAt = null;
+            task.ApprovedById = null;
+        }
+
+        await _context.SaveChangesAsync(cancellationToken);
+        return await BuildSummaryAsync(task, cancellationToken);
+    }
+
+    private async Task<OperationResult<TaskSummary>> BuildSummaryAsync(
+        TaskItem task,
+        CancellationToken cancellationToken)
+    {
+        var userIds = new List<Guid>();
+        if (task.AssigneeId is Guid assigneeId)
+        {
+            userIds.Add(assigneeId);
+        }
+
+        var userNames = await _userDirectory.GetFullNamesAsync(userIds, cancellationToken);
         return OperationResult<TaskSummary>.Success(
-            new TaskSummary(
-                task.Id,
-                task.ProjectId,
-                task.Title,
-                task.Description,
-                task.Status,
-                task.Priority,
-                task.CreatedAt));
+            TaskSummaryMapper.ToSummary(task, userNames));
     }
 }

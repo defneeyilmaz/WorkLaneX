@@ -2,7 +2,9 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WorkLaneX.Application.Features.Tasks.Commands.ApproveTask;
 using WorkLaneX.Application.Features.Tasks.Commands.CreateTask;
+using WorkLaneX.Application.Features.Tasks.Commands.RejectTask;
 using WorkLaneX.Application.Features.Tasks.Commands.UpdateTask;
 using WorkLaneX.Application.Features.Tasks.Commands.UpdateTaskStatus;
 using WorkLaneX.Application.Features.Tasks.Queries.ListTasksByProject;
@@ -45,14 +47,21 @@ public class ProjectsController : ControllerBase
         try
         {
             var result = await _mediator.Send(
-                new CreateTaskCommand(projectId, request.Title, request.Description, request.Priority),
+                new CreateTaskCommand(
+                    projectId,
+                    request.Title,
+                    request.Description,
+                    request.Priority,
+                    request.AssigneeId),
                 cancellationToken);
 
             if (!result.Succeeded)
             {
-                var status = result.Error?.Contains("access", StringComparison.OrdinalIgnoreCase) == true
-                    ? StatusCodes.Status404NotFound
-                    : StatusCodes.Status400BadRequest;
+                var status = result.Error?.Contains("permission", StringComparison.OrdinalIgnoreCase) == true
+                    ? StatusCodes.Status403Forbidden
+                    : result.Error?.Contains("access", StringComparison.OrdinalIgnoreCase) == true
+                        ? StatusCodes.Status404NotFound
+                        : StatusCodes.Status400BadRequest;
                 return StatusCode(status, new { error = result.Error });
             }
 
@@ -71,12 +80,15 @@ public class ProjectsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(
-            new UpdateTaskStatusCommand(taskId, request.Status),
+            new UpdateTaskStatusCommand(taskId, request.Status, request.CompletionNote),
             cancellationToken);
 
         if (!result.Succeeded)
         {
-            return NotFound(new { error = result.Error });
+            var status = result.Error?.Contains("permission", StringComparison.OrdinalIgnoreCase) == true
+                ? StatusCodes.Status403Forbidden
+                : StatusCodes.Status404NotFound;
+            return StatusCode(status, new { error = result.Error });
         }
 
         return Ok(result.Value);
@@ -96,12 +108,63 @@ public class ProjectsController : ControllerBase
                     request.Title,
                     request.Description,
                     request.Priority,
-                    request.Status),
+                    request.Status,
+                    request.AssigneeId,
+                    request.CompletionNote),
                 cancellationToken);
 
             if (!result.Succeeded)
             {
-                return NotFound(new { error = result.Error });
+                var status = result.Error?.Contains("permission", StringComparison.OrdinalIgnoreCase) == true
+                    ? StatusCodes.Status403Forbidden
+                    : StatusCodes.Status404NotFound;
+                return StatusCode(status, new { error = result.Error });
+            }
+
+            return Ok(result.Value);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+        }
+    }
+
+    [HttpPost("tasks/{taskId:guid}/approve")]
+    public async Task<IActionResult> ApproveTask(
+        Guid taskId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new ApproveTaskCommand(taskId), cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            var status = result.Error?.Contains("permission", StringComparison.OrdinalIgnoreCase) == true
+                ? StatusCodes.Status403Forbidden
+                : StatusCodes.Status404NotFound;
+            return StatusCode(status, new { error = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("tasks/{taskId:guid}/reject")]
+    public async Task<IActionResult> RejectTask(
+        Guid taskId,
+        [FromBody] RejectTaskRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _mediator.Send(
+                new RejectTaskCommand(taskId, request.RejectionNote),
+                cancellationToken);
+
+            if (!result.Succeeded)
+            {
+                var status = result.Error?.Contains("permission", StringComparison.OrdinalIgnoreCase) == true
+                    ? StatusCodes.Status403Forbidden
+                    : StatusCodes.Status404NotFound;
+                return StatusCode(status, new { error = result.Error });
             }
 
             return Ok(result.Value);
@@ -113,10 +176,22 @@ public class ProjectsController : ControllerBase
     }
 }
 
-public record CreateTaskRequest(string Title, string? Description, TaskPriority Priority = TaskPriority.Medium);
-public record UpdateTaskStatusRequest(TaskStatusEnum Status);
+public record CreateTaskRequest(
+    string Title,
+    string? Description,
+    TaskPriority Priority = TaskPriority.Medium,
+    Guid? AssigneeId = null);
+
+public record UpdateTaskStatusRequest(
+    TaskStatusEnum Status,
+    string? CompletionNote = null);
+
 public record UpdateTaskRequest(
     string Title,
     string? Description,
     TaskPriority Priority,
-    TaskStatusEnum Status);
+    TaskStatusEnum Status,
+    Guid? AssigneeId = null,
+    string? CompletionNote = null);
+
+public record RejectTaskRequest(string RejectionNote);

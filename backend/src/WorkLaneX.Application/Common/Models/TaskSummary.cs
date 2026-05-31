@@ -10,4 +10,9 @@ public record TaskSummary(
     string? Description,
     TaskStatusEnum Status,
     TaskPriority Priority,
-    DateTime CreatedAt);
+    DateTime CreatedAt,
+    Guid? AssigneeId,
+    string? AssigneeName,
+    TaskApprovalStatus ApprovalStatus,
+    string? CompletionNote,
+    string? RejectionNote);

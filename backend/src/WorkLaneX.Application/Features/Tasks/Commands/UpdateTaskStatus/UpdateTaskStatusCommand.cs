@@ -5,5 +5,8 @@ using TaskStatusEnum = WorkLaneX.Domain.Enums.TaskStatus;
 
 namespace WorkLaneX.Application.Features.Tasks.Commands.UpdateTaskStatus;
 
-public record UpdateTaskStatusCommand(Guid TaskId, TaskStatusEnum Status)
+public record UpdateTaskStatusCommand(
+    Guid TaskId,
+    TaskStatusEnum Status,
+    string? CompletionNote = null)
     : IRequest<OperationResult<TaskSummary>>;

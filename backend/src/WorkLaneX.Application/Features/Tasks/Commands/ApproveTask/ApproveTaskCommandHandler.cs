@@ -3,20 +3,19 @@ using Microsoft.EntityFrameworkCore;
 using WorkLaneX.Application.Common.Interfaces;
 using WorkLaneX.Application.Common.Mapping;
 using WorkLaneX.Application.Common.Models;
-using WorkLaneX.Domain.Entities;
-using TaskStatusEnum = WorkLaneX.Domain.Enums.TaskStatus;
+using WorkLaneX.Domain.Enums;
 
-namespace WorkLaneX.Application.Features.Tasks.Commands.CreateTask;
+namespace WorkLaneX.Application.Features.Tasks.Commands.ApproveTask;
 
-public class CreateTaskCommandHandler
-    : IRequestHandler<CreateTaskCommand, OperationResult<TaskSummary>>
+public class ApproveTaskCommandHandler
+    : IRequestHandler<ApproveTaskCommand, OperationResult<TaskSummary>>
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
     private readonly IWorkspaceAuthorizationService _authorization;
     private readonly IUserDirectory _userDirectory;
 
-    public CreateTaskCommandHandler(
+    public ApproveTaskCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUser,
         IWorkspaceAuthorizationService authorization,
@@ -29,7 +28,7 @@ public class CreateTaskCommandHandler
     }
 
     public async Task<OperationResult<TaskSummary>> Handle(
-        CreateTaskCommand request,
+        ApproveTaskCommand request,
         CancellationToken cancellationToken)
     {
         var userId = _currentUser.UserId;
@@ -38,14 +37,21 @@ public class CreateTaskCommandHandler
             return OperationResult<TaskSummary>.Failure("You must be signed in.");
         }
 
+        var task = await _context.TaskItems
+            .FirstOrDefaultAsync(t => t.Id == request.TaskId, cancellationToken);
+
+        if (task is null)
+        {
+            return OperationResult<TaskSummary>.Failure("Task not found.");
+        }
+
         var project = await _context.Projects
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == request.ProjectId, cancellationToken);
+            .FirstOrDefaultAsync(p => p.Id == task.ProjectId, cancellationToken);
 
         if (project is null)
         {
-            return OperationResult<TaskSummary>.Failure(
-                "Project not found or you do not have access.");
+            return OperationResult<TaskSummary>.Failure("Task not found.");
         }
 
         var membership = await _authorization.GetMembershipAsync(
@@ -53,43 +59,27 @@ public class CreateTaskCommandHandler
             userId.Value,
             cancellationToken);
 
-        if (membership is null || !_authorization.CanManageTasks(membership.Role))
+        if (membership is null || !_authorization.CanApproveTasks(membership.Role))
         {
             return OperationResult<TaskSummary>.Failure(
-                "You do not have permission to create tasks.");
+                "You do not have permission to approve tasks.");
         }
 
-        if (request.AssigneeId is Guid assigneeId)
+        if (task.ApprovalStatus != TaskApprovalStatus.Pending)
         {
-            var assigneeMember = await _authorization.GetMembershipAsync(
-                project.WorkspaceId,
-                assigneeId,
-                cancellationToken);
-
-            if (assigneeMember is null)
-            {
-                return OperationResult<TaskSummary>.Failure(
-                    "Assignee must be a member of this workspace.");
-            }
+            return OperationResult<TaskSummary>.Failure(
+                "Only pending tasks can be approved.");
         }
 
-        var task = new TaskItem
-        {
-            ProjectId = request.ProjectId,
-            Title = request.Title.Trim(),
-            Description = string.IsNullOrWhiteSpace(request.Description)
-                ? null
-                : request.Description.Trim(),
-            Priority = request.Priority,
-            Status = TaskStatusEnum.ToDo,
-            AssigneeId = request.AssigneeId,
-        };
-
-        _context.TaskItems.Add(task);
+        task.ApprovalStatus = TaskApprovalStatus.Approved;
+        task.ApprovedAt = DateTime.UtcNow;
+        task.ApprovedById = userId.Value;
+        task.RejectionNote = null;
+        task.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync(cancellationToken);
 
         var userNames = await _userDirectory.GetFullNamesAsync(
-            task.AssigneeId is Guid id ? [id] : [],
+            task.AssigneeId is Guid assigneeId ? [assigneeId] : [],
             cancellationToken);
 
         return OperationResult<TaskSummary>.Success(
