@@ -452,24 +452,38 @@
     }
   }
 
-  .task-priority-pill {
-    @apply inline-block rounded px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide;
+  .task-card-labels {
+    @apply flex items-center gap-1.5;
   }
 
+  .task-type-pill,
+  .task-priority-badge {
+    @apply box-border inline-flex h-[22px] items-center justify-center text-[11px] font-bold leading-none;
+  }
+
+  .task-type-pill {
+    @apply rounded-md border border-[#e7e5e4] bg-[#f5f5f4] px-2 uppercase tracking-wide text-[#57534e];
+  }
+
+  .task-priority-badge {
+    @apply min-w-[22px] rounded-md border border-transparent px-1 tabular-nums;
+  }
+
+  /* Gray → orange ramp on priority number only */
   .task-priority-low {
-    @apply bg-[#e7e5e4] text-[#57534e];
+    @apply bg-[#9ca3af] text-white;
   }
 
   .task-priority-medium {
-    @apply bg-[#ffedd5] text-[#c2410c];
+    @apply bg-[#fdba74] text-[#431407];
   }
 
   .task-priority-high {
-    @apply bg-[#fef3c7] text-[#b45309];
+    @apply bg-[#ea580c] text-white;
   }
 
   .task-priority-urgent {
-    @apply bg-[#ffe4e6] text-[#be123c];
+    @apply bg-[#9a3412] text-white;
   }
 
   .task-card-footer {

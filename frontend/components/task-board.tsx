@@ -67,12 +67,26 @@ const PRIORITY_PILL: Record<TaskPriority, string> = {
   Urgent: "task-priority-urgent",
 };
 
-const PRIORITY_LABEL: Record<TaskPriority, string> = {
-  Low: "Low",
-  Medium: "Task",
-  High: "High",
-  Urgent: "Urgent",
+const PRIORITY_NUMBER: Record<TaskPriority, number> = {
+  Urgent: 1,
+  High: 2,
+  Medium: 3,
+  Low: 4,
 };
+
+function TaskCardLabels({ priority }: { priority: TaskPriority }) {
+  return (
+    <div className="task-card-labels">
+      <span className="task-type-pill">Task</span>
+      <span
+        className={cn("task-priority-badge", PRIORITY_PILL[priority])}
+        aria-label={`Priority ${PRIORITY_NUMBER[priority]}`}
+      >
+        {PRIORITY_NUMBER[priority]}
+      </span>
+    </div>
+  );
+}
 
 const STATUS_HINT: Record<TaskStatus, string> = {
   ToDo: "Not started yet",
@@ -189,9 +203,7 @@ function KanbanTaskCard({
           className="min-w-0 flex-1 text-left"
           onClick={() => onOpen(task)}
         >
-          <span className={cn("task-priority-pill", PRIORITY_PILL[task.priority])}>
-            {PRIORITY_LABEL[task.priority]}
-          </span>
+          <TaskCardLabels priority={task.priority} />
           <p className="mt-2 text-base font-medium text-[#1c1917]">{task.title}</p>
           <div className="task-card-footer">
             <span className="text-sm text-[#78716c]">
@@ -567,9 +579,7 @@ export function TaskBoard({
           <DragOverlay dropAnimation={dropAnimation}>
             {activeTask ? (
               <div className={cn("task-card task-card-overlay", taskCardClass(activeTask, true))}>
-                <span className={cn("task-priority-pill", PRIORITY_PILL[activeTask.priority])}>
-                  {PRIORITY_LABEL[activeTask.priority]}
-                </span>
+                <TaskCardLabels priority={activeTask.priority} />
                 <p className="mt-2 text-base font-medium">{activeTask.title}</p>
               </div>
             ) : null}

@@ -33,10 +33,10 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
 };
 
 const PRIORITY_CLASSES: Record<TaskPriority, string> = {
-  Low: "bg-slate-100 text-slate-700",
-  Medium: "bg-sky-100 text-sky-800",
-  High: "bg-amber-100 text-amber-900",
-  Urgent: "bg-rose-100 text-rose-900",
+  Low: "bg-[#9ca3af] text-white",
+  Medium: "bg-[#fdba74] text-[#431407]",
+  High: "bg-[#ea580c] text-white",
+  Urgent: "bg-[#9a3412] text-white",
 };
 
 type TaskDetailDrawerProps = {
