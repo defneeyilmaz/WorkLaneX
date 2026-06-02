@@ -2,11 +2,13 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WorkLaneX.Application.Features.Tasks.Commands.AddTaskComment;
 using WorkLaneX.Application.Features.Tasks.Commands.ApproveTask;
 using WorkLaneX.Application.Features.Tasks.Commands.CreateTask;
 using WorkLaneX.Application.Features.Tasks.Commands.RejectTask;
 using WorkLaneX.Application.Features.Tasks.Commands.UpdateTask;
 using WorkLaneX.Application.Features.Tasks.Commands.UpdateTaskStatus;
+using WorkLaneX.Application.Features.Tasks.Queries.ListTaskComments;
 using WorkLaneX.Application.Features.Tasks.Queries.ListTasksByProject;
 using WorkLaneX.Domain.Enums;
 using TaskStatusEnum = WorkLaneX.Domain.Enums.TaskStatus;
@@ -147,6 +149,46 @@ public class ProjectsController : ControllerBase
         return Ok(result.Value);
     }
 
+    [HttpGet("tasks/{taskId:guid}/comments")]
+    public async Task<IActionResult> ListTaskComments(
+        Guid taskId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new ListTaskCommentsQuery(taskId), cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return NotFound(new { error = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("tasks/{taskId:guid}/comments")]
+    public async Task<IActionResult> AddTaskComment(
+        Guid taskId,
+        [FromBody] AddTaskCommentRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _mediator.Send(
+                new AddTaskCommentCommand(taskId, request.Body),
+                cancellationToken);
+
+            if (!result.Succeeded)
+            {
+                return NotFound(new { error = result.Error });
+            }
+
+            return CreatedAtAction(nameof(ListTaskComments), new { taskId }, result.Value);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+        }
+    }
+
     [HttpPost("tasks/{taskId:guid}/reject")]
     public async Task<IActionResult> RejectTask(
         Guid taskId,
@@ -195,3 +237,5 @@ public record UpdateTaskRequest(
     string? CompletionNote = null);
 
 public record RejectTaskRequest(string RejectionNote);
+
+public record AddTaskCommentRequest(string Body);

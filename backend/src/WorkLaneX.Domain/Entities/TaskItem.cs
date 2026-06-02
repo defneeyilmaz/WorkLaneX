@@ -20,4 +20,6 @@ public class TaskItem : BaseEntity
     public TaskApprovalStatus ApprovalStatus { get; set; } = TaskApprovalStatus.None;
     public DateTime? ApprovedAt { get; set; }
     public Guid? ApprovedById { get; set; }
+
+    public ICollection<TaskComment> Comments { get; set; } = [];
 }
