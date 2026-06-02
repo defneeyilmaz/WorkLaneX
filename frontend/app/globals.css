@@ -494,12 +494,33 @@
     @apply flex size-7 items-center justify-center rounded-full text-[11px] font-semibold text-white;
   }
 
-  .task-detail-drawer {
-    @apply fixed inset-y-0 right-0 z-50 flex w-full max-w-md flex-col border-l border-[#dfe1e6] bg-white shadow-2xl;
+  .task-detail-backdrop {
+    @apply fixed inset-0 z-[100] bg-[#1c1917]/45;
   }
 
-  .task-detail-backdrop {
-    @apply fixed inset-0 z-40 bg-[#091e42]/40;
+  .task-detail-dialog {
+    @apply fixed left-1/2 top-1/2 z-[100] flex max-h-[min(82vh,46rem)] w-[calc(100%-2rem)] max-w-5xl -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-xl border border-[#e7e5e4] bg-white text-[#1c1917] shadow-2xl;
+  }
+
+  .task-detail-dialog label,
+  .task-detail-dialog [data-slot="label"] {
+    @apply text-[#57534e];
+  }
+
+  .task-detail-body {
+    @apply grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(16rem,22rem)];
+  }
+
+  .task-detail-main {
+    @apply min-h-0 space-y-4 overflow-y-auto px-6 py-5;
+  }
+
+  .task-detail-comments {
+    @apply flex min-h-0 flex-col border-t border-[#e7e5e4] bg-[#fafaf9] px-5 py-5 md:border-l md:border-t-0;
+  }
+
+  .task-detail-comments-list {
+    @apply mt-3 min-h-0 flex-1 space-y-3 overflow-y-auto;
   }
 
   .task-card-approved {

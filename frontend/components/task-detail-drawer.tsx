@@ -1,6 +1,7 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,12 @@ import {
   memberAllowedStatuses,
   normalizeWorkspaceRole,
 } from "@/lib/permissions";
+import {
+  addTaskComment,
+  fetchTaskComments,
+  getTaskCommentErrorMessage,
+  type TaskCommentSummary,
+} from "@/lib/task-comments";
 import {
   approveTask,
   getTaskErrorMessage,
@@ -68,6 +75,29 @@ export function TaskDetailDrawer({
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
+  const [comments, setComments] = useState<TaskCommentSummary[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentBody, setCommentBody] = useState("");
+  const [commentError, setCommentError] = useState<string | null>(null);
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, open]);
 
   const role = normalizeWorkspaceRole(workspaceRole);
   const isManager = isManagerRole(role);
@@ -87,9 +117,35 @@ export function TaskDetailDrawer({
     setCompletionNote(task.completionNote ?? "");
     setRejectionNote("");
     setError(null);
+    setCommentBody("");
+    setCommentError(null);
   }, [task]);
 
-  if (!open || !task) {
+  const loadComments = useCallback(async () => {
+    if (!task) {
+      return;
+    }
+
+    setCommentsLoading(true);
+    setCommentError(null);
+    try {
+      const data = await fetchTaskComments(task.id);
+      setComments(data);
+    } catch {
+      setCommentError("Could not load comments.");
+    } finally {
+      setCommentsLoading(false);
+    }
+  }, [task]);
+
+  useEffect(() => {
+    if (!open || !task) {
+      return;
+    }
+    void loadComments();
+  }, [open, task, loadComments]);
+
+  if (!open || !task || !mounted) {
     return null;
   }
 
@@ -137,6 +193,24 @@ export function TaskDetailDrawer({
     }
   }
 
+  async function handleAddComment() {
+    if (!commentBody.trim()) {
+      return;
+    }
+
+    setCommentError(null);
+    setIsCommentSubmitting(true);
+    try {
+      const created = await addTaskComment(task!.id, commentBody);
+      setComments((current) => [...current, created]);
+      setCommentBody("");
+    } catch (err) {
+      setCommentError(getTaskCommentErrorMessage(err));
+    } finally {
+      setIsCommentSubmitting(false);
+    }
+  }
+
   async function handleReject() {
     if (!rejectionNote.trim()) {
       setError("Add a rejection note before sending the task back.");
@@ -156,7 +230,7 @@ export function TaskDetailDrawer({
     }
   }
 
-  return (
+  return createPortal(
     <>
       <button
         type="button"
@@ -164,27 +238,35 @@ export function TaskDetailDrawer({
         onClick={onClose}
         aria-label="Close task details"
       />
-      <aside
-        className="task-detail-drawer"
+      <div
+        className="task-detail-dialog"
         role="dialog"
         aria-modal="true"
         aria-labelledby="task-detail-title"
       >
-        <div className="flex items-start justify-between border-b border-white/50 px-5 py-4">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Task details</p>
-            <h2 id="task-detail-title" className="mt-1 text-xl font-semibold">
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-[#e7e5e4] px-6 py-5">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-[#78716c]">Task details</p>
+            <h2
+              id="task-detail-title"
+              className="mt-1 truncate text-xl font-semibold text-[#1c1917]"
+            >
               {task.title}
             </h2>
           </div>
-          <Button type="button" variant="outline" size="sm" onClick={onClose}>
-            <X className="size-4" />
-            <span className="sr-only">Close</span>
-          </Button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 text-[#78716c] hover:bg-[#f5f5f4] hover:text-[#1c1917]"
+            aria-label="Close"
+          >
+            <X className="size-5" />
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
-          <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          <div className="task-detail-body">
+            <div className="task-detail-main">
             {error ? (
               <p className="text-sm text-destructive" role="alert">
                 {error}
@@ -248,7 +330,7 @@ export function TaskDetailDrawer({
                   <Label htmlFor="detail-description">Description</Label>
                   <textarea
                     id="detail-description"
-                    className="min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    className="min-h-24 w-full rounded-md border border-input bg-background px-3 py-2 text-base shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     maxLength={2000}
@@ -387,10 +469,72 @@ export function TaskDetailDrawer({
                 </div>
               </div>
             ) : null}
+            </div>
+
+            <div className="task-detail-comments">
+              <p className="text-sm font-semibold text-[#1c1917]">Comments</p>
+              <div className="task-detail-comments-list">
+                {commentsLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading comments…</p>
+                ) : comments.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No comments yet.</p>
+                ) : (
+                  <ul className="space-y-3">
+                    {comments.map((comment) => (
+                      <li
+                        key={comment.id}
+                        className="rounded-lg border border-[#e7e5e4] bg-white px-3 py-2.5 text-sm"
+                      >
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="font-semibold text-[#1c1917]">{comment.authorName}</p>
+                          <time
+                            className="shrink-0 text-[10px] text-[#78716c]"
+                            dateTime={comment.createdAt}
+                          >
+                            {new Date(comment.createdAt).toLocaleString()}
+                          </time>
+                        </div>
+                        <p className="mt-1 whitespace-pre-wrap text-[#44403c]">{comment.body}</p>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+              {commentError ? (
+                <p className="mt-2 text-sm text-destructive" role="alert">
+                  {commentError}
+                </p>
+              ) : null}
+              <div className="mt-4 shrink-0 space-y-2 border-t border-[#e7e5e4] pt-4">
+                <Label htmlFor="detail-comment-body">Add a comment</Label>
+                <textarea
+                  id="detail-comment-body"
+                  className="min-h-[4.5rem] w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  value={commentBody}
+                  onChange={(e) => setCommentBody(e.target.value)}
+                  placeholder="Write a comment for the team"
+                  maxLength={2000}
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  className="w-full"
+                  disabled={isCommentSubmitting || !commentBody.trim()}
+                  onClick={() => void handleAddComment()}
+                >
+                  {isCommentSubmitting ? "Posting…" : "Post comment"}
+                </Button>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center justify-end gap-2 border-t border-white/50 px-5 py-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-[#e7e5e4] px-6 py-4">
+            <Button
+              type="button"
+              variant="outline"
+              className="dialog-btn-cancel"
+              onClick={onClose}
+            >
               Cancel
             </Button>
             {canEdit ? (
@@ -400,7 +544,8 @@ export function TaskDetailDrawer({
             ) : null}
           </div>
         </form>
-      </aside>
-    </>
+      </div>
+    </>,
+    document.body,
   );
 }
