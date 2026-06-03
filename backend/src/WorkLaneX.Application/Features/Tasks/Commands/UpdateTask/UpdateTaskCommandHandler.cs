@@ -16,17 +16,20 @@ public class UpdateTaskCommandHandler
     private readonly ICurrentUserService _currentUser;
     private readonly IWorkspaceAuthorizationService _authorization;
     private readonly IUserDirectory _userDirectory;
+    private readonly IActivityLogService _activityLog;
 
     public UpdateTaskCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUser,
         IWorkspaceAuthorizationService authorization,
-        IUserDirectory userDirectory)
+        IUserDirectory userDirectory,
+        IActivityLogService activityLog)
     {
         _context = context;
         _currentUser = currentUser;
         _authorization = authorization;
         _userDirectory = userDirectory;
+        _activityLog = activityLog;
     }
 
     public async Task<OperationResult<TaskSummary>> Handle(
@@ -97,6 +100,8 @@ public class UpdateTaskCommandHandler
             }
         }
 
+        var previousStatus = task.Status;
+
         task.Title = request.Title.Trim();
         task.Description = string.IsNullOrWhiteSpace(request.Description)
             ? null
@@ -115,6 +120,15 @@ public class UpdateTaskCommandHandler
         }
 
         task.UpdatedAt = DateTime.UtcNow;
+
+        RecordTaskUpdateActivity(
+            task,
+            project.Id,
+            project.WorkspaceId,
+            userId.Value,
+            previousStatus,
+            request.Status);
+
         await _context.SaveChangesAsync(cancellationToken);
 
         return await BuildSummaryAsync(task, cancellationToken);
@@ -139,6 +153,16 @@ public class UpdateTaskCommandHandler
                 "You can only move a task forward to a later status.");
         }
 
+        var project = await _context.Projects
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == task.ProjectId, cancellationToken);
+
+        if (project is null)
+        {
+            return OperationResult<TaskSummary>.Failure("Task not found.");
+        }
+
+        var previousStatus = task.Status;
         task.Status = request.Status;
         task.UpdatedAt = DateTime.UtcNow;
 
@@ -153,8 +177,46 @@ public class UpdateTaskCommandHandler
             task.ApprovedById = null;
         }
 
+        RecordTaskUpdateActivity(
+            task,
+            project.Id,
+            project.WorkspaceId,
+            userId,
+            previousStatus,
+            request.Status);
+
         await _context.SaveChangesAsync(cancellationToken);
         return await BuildSummaryAsync(task, cancellationToken);
+    }
+
+    private void RecordTaskUpdateActivity(
+        TaskItem task,
+        Guid projectId,
+        Guid workspaceId,
+        Guid actorId,
+        TaskStatusEnum previousStatus,
+        TaskStatusEnum newStatus)
+    {
+        if (previousStatus != newStatus)
+        {
+            _activityLog.Record(
+                task.Id,
+                projectId,
+                workspaceId,
+                actorId,
+                ActivityActionType.TaskStatusChanged,
+                ActivityLogFormatter.FormatStatusChange(previousStatus, newStatus));
+        }
+        else
+        {
+            _activityLog.Record(
+                task.Id,
+                projectId,
+                workspaceId,
+                actorId,
+                ActivityActionType.TaskUpdated,
+                "updated task details");
+        }
     }
 
     private async Task<OperationResult<TaskSummary>> BuildSummaryAsync(

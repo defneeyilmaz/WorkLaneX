@@ -15,17 +15,20 @@ public class UpdateTaskStatusCommandHandler
     private readonly ICurrentUserService _currentUser;
     private readonly IWorkspaceAuthorizationService _authorization;
     private readonly IUserDirectory _userDirectory;
+    private readonly IActivityLogService _activityLog;
 
     public UpdateTaskStatusCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUser,
         IWorkspaceAuthorizationService authorization,
-        IUserDirectory userDirectory)
+        IUserDirectory userDirectory,
+        IActivityLogService activityLog)
     {
         _context = context;
         _currentUser = currentUser;
         _authorization = authorization;
         _userDirectory = userDirectory;
+        _activityLog = activityLog;
     }
 
     public async Task<OperationResult<TaskSummary>> Handle(
@@ -86,6 +89,7 @@ public class UpdateTaskStatusCommandHandler
                 "You do not have permission to update tasks.");
         }
 
+        var previousStatus = task.Status;
         task.Status = request.Status;
         task.UpdatedAt = DateTime.UtcNow;
 
@@ -114,6 +118,17 @@ public class UpdateTaskStatusCommandHandler
             task.RejectionNote = null;
             task.ApprovedAt = null;
             task.ApprovedById = null;
+        }
+
+        if (previousStatus != request.Status)
+        {
+            _activityLog.Record(
+                task.Id,
+                project.Id,
+                project.WorkspaceId,
+                userId.Value,
+                ActivityActionType.TaskStatusChanged,
+                ActivityLogFormatter.FormatStatusChange(previousStatus, request.Status));
         }
 
         await _context.SaveChangesAsync(cancellationToken);

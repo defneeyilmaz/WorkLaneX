@@ -20,6 +20,7 @@ public class WorkLaneXDbContext
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<TaskItem> TaskItems => Set<TaskItem>();
     public DbSet<TaskComment> TaskComments => Set<TaskComment>();
+    public DbSet<ActivityLog> ActivityLogs => Set<ActivityLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -8,6 +8,7 @@ using WorkLaneX.Application.Features.Tasks.Commands.CreateTask;
 using WorkLaneX.Application.Features.Tasks.Commands.RejectTask;
 using WorkLaneX.Application.Features.Tasks.Commands.UpdateTask;
 using WorkLaneX.Application.Features.Tasks.Commands.UpdateTaskStatus;
+using WorkLaneX.Application.Features.Tasks.Queries.ListTaskActivity;
 using WorkLaneX.Application.Features.Tasks.Queries.ListTaskComments;
 using WorkLaneX.Application.Features.Tasks.Queries.ListTasksByProject;
 using WorkLaneX.Domain.Enums;
@@ -144,6 +145,21 @@ public class ProjectsController : ControllerBase
                 ? StatusCodes.Status403Forbidden
                 : StatusCodes.Status404NotFound;
             return StatusCode(status, new { error = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("tasks/{taskId:guid}/activity")]
+    public async Task<IActionResult> ListTaskActivity(
+        Guid taskId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new ListTaskActivityQuery(taskId), cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return NotFound(new { error = result.Error });
         }
 
         return Ok(result.Value);

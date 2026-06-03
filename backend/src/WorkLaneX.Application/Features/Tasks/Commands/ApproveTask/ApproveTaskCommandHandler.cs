@@ -14,17 +14,20 @@ public class ApproveTaskCommandHandler
     private readonly ICurrentUserService _currentUser;
     private readonly IWorkspaceAuthorizationService _authorization;
     private readonly IUserDirectory _userDirectory;
+    private readonly IActivityLogService _activityLog;
 
     public ApproveTaskCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUser,
         IWorkspaceAuthorizationService authorization,
-        IUserDirectory userDirectory)
+        IUserDirectory userDirectory,
+        IActivityLogService activityLog)
     {
         _context = context;
         _currentUser = currentUser;
         _authorization = authorization;
         _userDirectory = userDirectory;
+        _activityLog = activityLog;
     }
 
     public async Task<OperationResult<TaskSummary>> Handle(
@@ -76,6 +79,14 @@ public class ApproveTaskCommandHandler
         task.ApprovedById = userId.Value;
         task.RejectionNote = null;
         task.UpdatedAt = DateTime.UtcNow;
+
+        _activityLog.Record(
+            task.Id,
+            project.Id,
+            project.WorkspaceId,
+            userId.Value,
+            ActivityActionType.TaskApproved);
+
         await _context.SaveChangesAsync(cancellationToken);
 
         var userNames = await _userDirectory.GetFullNamesAsync(

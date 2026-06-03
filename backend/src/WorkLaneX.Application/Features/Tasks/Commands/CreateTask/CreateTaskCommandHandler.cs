@@ -4,6 +4,7 @@ using WorkLaneX.Application.Common.Interfaces;
 using WorkLaneX.Application.Common.Mapping;
 using WorkLaneX.Application.Common.Models;
 using WorkLaneX.Domain.Entities;
+using WorkLaneX.Domain.Enums;
 using TaskStatusEnum = WorkLaneX.Domain.Enums.TaskStatus;
 
 namespace WorkLaneX.Application.Features.Tasks.Commands.CreateTask;
@@ -15,17 +16,20 @@ public class CreateTaskCommandHandler
     private readonly ICurrentUserService _currentUser;
     private readonly IWorkspaceAuthorizationService _authorization;
     private readonly IUserDirectory _userDirectory;
+    private readonly IActivityLogService _activityLog;
 
     public CreateTaskCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUser,
         IWorkspaceAuthorizationService authorization,
-        IUserDirectory userDirectory)
+        IUserDirectory userDirectory,
+        IActivityLogService activityLog)
     {
         _context = context;
         _currentUser = currentUser;
         _authorization = authorization;
         _userDirectory = userDirectory;
+        _activityLog = activityLog;
     }
 
     public async Task<OperationResult<TaskSummary>> Handle(
@@ -86,6 +90,15 @@ public class CreateTaskCommandHandler
         };
 
         _context.TaskItems.Add(task);
+
+        _activityLog.Record(
+            task.Id,
+            project.Id,
+            project.WorkspaceId,
+            userId.Value,
+            ActivityActionType.TaskCreated,
+            task.Title);
+
         await _context.SaveChangesAsync(cancellationToken);
 
         var userNames = await _userDirectory.GetFullNamesAsync(

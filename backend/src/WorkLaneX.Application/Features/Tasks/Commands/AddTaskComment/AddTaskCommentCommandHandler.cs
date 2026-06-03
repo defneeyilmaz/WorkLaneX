@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using WorkLaneX.Application.Common.Interfaces;
 using WorkLaneX.Application.Common.Models;
 using WorkLaneX.Domain.Entities;
+using WorkLaneX.Domain.Enums;
 
 namespace WorkLaneX.Application.Features.Tasks.Commands.AddTaskComment;
 
@@ -13,17 +14,20 @@ public class AddTaskCommentCommandHandler
     private readonly ICurrentUserService _currentUser;
     private readonly IWorkspaceAuthorizationService _authorization;
     private readonly IUserDirectory _userDirectory;
+    private readonly IActivityLogService _activityLog;
 
     public AddTaskCommentCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUser,
         IWorkspaceAuthorizationService authorization,
-        IUserDirectory userDirectory)
+        IUserDirectory userDirectory,
+        IActivityLogService activityLog)
     {
         _context = context;
         _currentUser = currentUser;
         _authorization = authorization;
         _userDirectory = userDirectory;
+        _activityLog = activityLog;
     }
 
     public async Task<OperationResult<TaskCommentSummary>> Handle(
@@ -65,6 +69,16 @@ public class AddTaskCommentCommandHandler
         };
 
         _context.TaskComments.Add(comment);
+
+        var preview = comment.Body.Length > 120 ? comment.Body[..120] + "…" : comment.Body;
+        _activityLog.Record(
+            task.Id,
+            task.ProjectId,
+            task.Project.WorkspaceId,
+            userId.Value,
+            ActivityActionType.TaskCommentAdded,
+            preview);
+
         await _context.SaveChangesAsync(cancellationToken);
 
         var authorNames = await _userDirectory.GetFullNamesAsync([userId.Value], cancellationToken);

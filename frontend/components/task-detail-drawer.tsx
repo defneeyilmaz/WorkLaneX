@@ -15,6 +15,10 @@ import {
   normalizeWorkspaceRole,
 } from "@/lib/permissions";
 import {
+  fetchTaskActivity,
+  type ActivityLogSummary,
+} from "@/lib/task-activity";
+import {
   addTaskComment,
   fetchTaskComments,
   getTaskCommentErrorMessage,
@@ -80,6 +84,8 @@ export function TaskDetailDrawer({
   const [commentBody, setCommentBody] = useState("");
   const [commentError, setCommentError] = useState<string | null>(null);
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
+  const [activity, setActivity] = useState<ActivityLogSummary[]>([]);
+  const [activityLoading, setActivityLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -138,12 +144,32 @@ export function TaskDetailDrawer({
     }
   }, [task]);
 
+  const loadActivity = useCallback(async () => {
+    if (!task) {
+      return;
+    }
+
+    setActivityLoading(true);
+    try {
+      const data = await fetchTaskActivity(task.id);
+      setActivity(data);
+    } catch {
+      setActivity([]);
+    } finally {
+      setActivityLoading(false);
+    }
+  }, [task]);
+
+  const refreshSidePanel = useCallback(async () => {
+    await Promise.all([loadComments(), loadActivity()]);
+  }, [loadActivity, loadComments]);
+
   useEffect(() => {
     if (!open || !task) {
       return;
     }
-    void loadComments();
-  }, [open, task, loadComments]);
+    void refreshSidePanel();
+  }, [open, task, refreshSidePanel]);
 
   if (!open || !task || !mounted) {
     return null;
@@ -204,6 +230,7 @@ export function TaskDetailDrawer({
       const created = await addTaskComment(task!.id, commentBody);
       setComments((current) => [...current, created]);
       setCommentBody("");
+      await loadActivity();
     } catch (err) {
       setCommentError(getTaskCommentErrorMessage(err));
     } finally {
@@ -433,6 +460,35 @@ export function TaskDetailDrawer({
                 You can view this task but only edit tasks assigned to you.
               </p>
             )}
+
+            <div className="space-y-3 border-t border-[#e7e5e4] pt-4">
+              <p className="text-sm font-semibold text-[#1c1917]">Activity</p>
+              {activityLoading ? (
+                <p className="text-sm text-muted-foreground">Loading activity…</p>
+              ) : activity.length === 0 ? (
+                <p className="text-sm text-muted-foreground">No activity yet.</p>
+              ) : (
+                <ul className="max-h-40 space-y-2 overflow-y-auto">
+                  {activity.map((entry) => (
+                    <li
+                      key={entry.id}
+                      className="rounded-lg border border-[#e7e5e4] bg-[#fafaf9] px-3 py-2 text-sm"
+                    >
+                      <p className="text-[#1c1917]">
+                        <span className="font-semibold">{entry.actorName}</span>{" "}
+                        {entry.message}
+                      </p>
+                      <time
+                        className="mt-1 block text-[10px] text-[#78716c]"
+                        dateTime={entry.createdAt}
+                      >
+                        {new Date(entry.createdAt).toLocaleString()}
+                      </time>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
             {canApproveTasks(role) && task!.approvalStatus === "Pending" ? (
               <div className="space-y-3 rounded-xl border border-amber-200 bg-amber-50/80 p-4">

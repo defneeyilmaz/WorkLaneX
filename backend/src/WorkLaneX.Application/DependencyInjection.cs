@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(assembly);
 
         services.AddScoped<IWorkspaceAuthorizationService, WorkspaceAuthorizationService>();
+        services.AddScoped<IActivityLogService, ActivityLogService>();
 
         return services;
     }

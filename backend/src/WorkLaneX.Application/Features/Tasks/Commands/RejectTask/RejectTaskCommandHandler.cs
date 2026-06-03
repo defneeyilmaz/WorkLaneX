@@ -15,17 +15,20 @@ public class RejectTaskCommandHandler
     private readonly ICurrentUserService _currentUser;
     private readonly IWorkspaceAuthorizationService _authorization;
     private readonly IUserDirectory _userDirectory;
+    private readonly IActivityLogService _activityLog;
 
     public RejectTaskCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUser,
         IWorkspaceAuthorizationService authorization,
-        IUserDirectory userDirectory)
+        IUserDirectory userDirectory,
+        IActivityLogService activityLog)
     {
         _context = context;
         _currentUser = currentUser;
         _authorization = authorization;
         _userDirectory = userDirectory;
+        _activityLog = activityLog;
     }
 
     public async Task<OperationResult<TaskSummary>> Handle(
@@ -78,6 +81,19 @@ public class RejectTaskCommandHandler
         task.ApprovedAt = null;
         task.ApprovedById = null;
         task.UpdatedAt = DateTime.UtcNow;
+
+        var notePreview = task.RejectionNote.Length > 120
+            ? task.RejectionNote[..120] + "…"
+            : task.RejectionNote;
+
+        _activityLog.Record(
+            task.Id,
+            project.Id,
+            project.WorkspaceId,
+            userId.Value,
+            ActivityActionType.TaskRejected,
+            notePreview);
+
         await _context.SaveChangesAsync(cancellationToken);
 
         var userNames = await _userDirectory.GetFullNamesAsync(
