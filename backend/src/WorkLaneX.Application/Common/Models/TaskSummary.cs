@@ -9,6 +9,7 @@ public record TaskSummary(
     string Title,
     string? Description,
     TaskStatusEnum Status,
+    int SortOrder,
     TaskPriority Priority,
     DateTime CreatedAt,
     Guid? AssigneeId,

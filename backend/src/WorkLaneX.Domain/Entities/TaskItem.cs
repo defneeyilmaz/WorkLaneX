@@ -12,6 +12,7 @@ public class TaskItem : BaseEntity
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public TaskStatusEnum Status { get; set; } = TaskStatusEnum.ToDo;
+    public int SortOrder { get; set; }
     public TaskPriority Priority { get; set; } = TaskPriority.Medium;
 
     public Guid? AssigneeId { get; set; }

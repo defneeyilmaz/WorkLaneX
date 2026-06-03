@@ -6,6 +6,7 @@ using WorkLaneX.Application.Features.Tasks.Commands.AddTaskComment;
 using WorkLaneX.Application.Features.Tasks.Commands.ApproveTask;
 using WorkLaneX.Application.Features.Tasks.Commands.CreateTask;
 using WorkLaneX.Application.Features.Tasks.Commands.RejectTask;
+using WorkLaneX.Application.Features.Tasks.Commands.MoveTask;
 using WorkLaneX.Application.Features.Tasks.Commands.UpdateTask;
 using WorkLaneX.Application.Features.Tasks.Commands.UpdateTaskStatus;
 using WorkLaneX.Application.Features.Tasks.Queries.ListTaskActivity;
@@ -84,6 +85,27 @@ public class ProjectsController : ControllerBase
     {
         var result = await _mediator.Send(
             new UpdateTaskStatusCommand(taskId, request.Status, request.CompletionNote),
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            var status = result.Error?.Contains("permission", StringComparison.OrdinalIgnoreCase) == true
+                ? StatusCodes.Status403Forbidden
+                : StatusCodes.Status404NotFound;
+            return StatusCode(status, new { error = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPatch("tasks/{taskId:guid}/move")]
+    public async Task<IActionResult> MoveTask(
+        Guid taskId,
+        [FromBody] MoveTaskRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new MoveTaskCommand(taskId, request.Status, request.SortOrder),
             cancellationToken);
 
         if (!result.Succeeded)
@@ -243,6 +265,8 @@ public record CreateTaskRequest(
 public record UpdateTaskStatusRequest(
     TaskStatusEnum Status,
     string? CompletionNote = null);
+
+public record MoveTaskRequest(TaskStatusEnum Status, int SortOrder);
 
 public record UpdateTaskRequest(
     string Title,

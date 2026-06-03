@@ -22,6 +22,7 @@ public static class TaskSummaryMapper
             task.Title,
             task.Description,
             task.Status,
+            task.SortOrder,
             task.Priority,
             task.CreatedAt,
             task.AssigneeId,

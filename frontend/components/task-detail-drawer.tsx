@@ -43,11 +43,11 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
   Done: "Done",
 };
 
-const PRIORITY_CLASSES: Record<TaskPriority, string> = {
-  Low: "bg-[#9ca3af] text-white",
-  Medium: "bg-[#fdba74] text-[#431407]",
-  High: "bg-[#ea580c] text-white",
-  Urgent: "bg-[#9a3412] text-white",
+const PRIORITY_STRIPE: Record<TaskPriority, string> = {
+  Low: "task-detail-priority-low",
+  Medium: "task-detail-priority-medium",
+  High: "task-detail-priority-high",
+  Urgent: "task-detail-priority-urgent",
 };
 
 type TaskDetailDrawerProps = {
@@ -303,11 +303,11 @@ export function TaskDetailDrawer({
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span
                 className={cn(
-                  "rounded-full px-2.5 py-0.5 text-xs font-semibold",
-                  PRIORITY_CLASSES[task.priority],
+                  "task-detail-priority-stripe",
+                  PRIORITY_STRIPE[task.priority],
                 )}
               >
-                {task.priority}
+                {task.priority} priority
               </span>
               {task.approvalStatus === "Pending" ? (
                 <span className="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-900">

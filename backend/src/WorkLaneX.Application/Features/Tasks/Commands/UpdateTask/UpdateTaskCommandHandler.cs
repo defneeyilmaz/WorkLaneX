@@ -110,6 +110,18 @@ public class UpdateTaskCommandHandler
         task.Status = request.Status;
         task.AssigneeId = request.AssigneeId;
 
+        if (previousStatus != request.Status)
+        {
+            var maxSortOrder = await _context.TaskItems
+                .Where(t =>
+                    t.ProjectId == task.ProjectId &&
+                    t.Status == request.Status &&
+                    t.Id != task.Id)
+                .Select(t => (int?)t.SortOrder)
+                .MaxAsync(cancellationToken) ?? 0;
+            task.SortOrder = maxSortOrder + 1000;
+        }
+
         if (request.Status != TaskStatusEnum.Done)
         {
             task.ApprovalStatus = TaskApprovalStatus.None;
@@ -165,6 +177,18 @@ public class UpdateTaskCommandHandler
         var previousStatus = task.Status;
         task.Status = request.Status;
         task.UpdatedAt = DateTime.UtcNow;
+
+        if (previousStatus != request.Status)
+        {
+            var maxSortOrder = await _context.TaskItems
+                .Where(t =>
+                    t.ProjectId == task.ProjectId &&
+                    t.Status == request.Status &&
+                    t.Id != task.Id)
+                .Select(t => (int?)t.SortOrder)
+                .MaxAsync(cancellationToken) ?? 0;
+            task.SortOrder = maxSortOrder + 1000;
+        }
 
         if (request.Status == TaskStatusEnum.Done)
         {

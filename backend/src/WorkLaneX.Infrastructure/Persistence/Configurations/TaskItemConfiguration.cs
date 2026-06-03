@@ -37,7 +37,10 @@ public class TaskItemConfiguration : IEntityTypeConfiguration<TaskItem>
         builder.Property(t => t.RejectionNote)
             .HasMaxLength(2000);
 
-        builder.HasIndex(t => new { t.ProjectId, t.Status });
+        builder.Property(t => t.SortOrder)
+            .HasDefaultValue(0);
+
+        builder.HasIndex(t => new { t.ProjectId, t.Status, t.SortOrder });
         builder.HasIndex(t => t.AssigneeId);
     }
 }

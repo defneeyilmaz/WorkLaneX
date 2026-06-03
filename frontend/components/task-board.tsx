@@ -4,7 +4,7 @@ import {
   DndContext,
   DragOverlay,
   PointerSensor,
-  useDraggable,
+  closestCenter,
   useDroppable,
   useSensor,
   useSensors,
@@ -12,6 +12,12 @@ import {
   type DragStartEvent,
   type DropAnimation,
 } from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, GripVertical, Plus, X } from "lucide-react";
@@ -29,12 +35,14 @@ import {
 } from "@/lib/permissions";
 import {
   approveTask,
+  computeSortOrderForIndex,
   fetchProjectTasks,
   getTaskErrorMessage,
+  moveTask,
+  sortOrderBetween,
   type TaskPriority,
   type TaskStatus,
   type TaskSummary,
-  updateTaskStatus,
 } from "@/lib/tasks";
 import {
   fetchWorkspaceMembers,
@@ -60,33 +68,12 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
   Done: "Done",
 };
 
-const PRIORITY_PILL: Record<TaskPriority, string> = {
-  Low: "task-priority-low",
-  Medium: "task-priority-medium",
-  High: "task-priority-high",
-  Urgent: "task-priority-urgent",
+const PRIORITY_STRIPE: Record<TaskPriority, string> = {
+  Low: "task-card-priority-low",
+  Medium: "task-card-priority-medium",
+  High: "task-card-priority-high",
+  Urgent: "task-card-priority-urgent",
 };
-
-const PRIORITY_NUMBER: Record<TaskPriority, number> = {
-  Urgent: 1,
-  High: 2,
-  Medium: 3,
-  Low: 4,
-};
-
-function TaskCardLabels({ priority }: { priority: TaskPriority }) {
-  return (
-    <div className="task-card-labels">
-      <span className="task-type-pill">Task</span>
-      <span
-        className={cn("task-priority-badge", PRIORITY_PILL[priority])}
-        aria-label={`Priority ${PRIORITY_NUMBER[priority]}`}
-      >
-        {PRIORITY_NUMBER[priority]}
-      </span>
-    </div>
-  );
-}
 
 const STATUS_HINT: Record<TaskStatus, string> = {
   ToDo: "Not started yet",
@@ -131,6 +118,7 @@ function parseLaneStatus(id: string | number): TaskStatus | null {
 function taskCardClass(task: TaskSummary, interactive: boolean) {
   return cn(
     "task-card",
+    PRIORITY_STRIPE[task.priority],
     !interactive && "task-card-readonly",
     task.approvalStatus === "Approved" && "task-card-approved",
     task.approvalStatus === "Rejected" && "task-card-rejected",
@@ -161,14 +149,22 @@ function KanbanTaskCard({
   justLanded,
   onLandAnimationEnd,
 }: KanbanTaskCardProps) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSortableDragging,
+  } = useSortable({
     id: task.id,
     disabled: !interactive,
   });
 
-  const style = transform
-    ? { transform: CSS.Translate.toString(transform) }
-    : undefined;
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   return (
     <li
@@ -176,7 +172,7 @@ function KanbanTaskCard({
       style={style}
       className={cn(
         taskCardClass(task, interactive),
-        isDragging && "task-card-dragging",
+        (isSortableDragging || isDragging) && "task-card-dragging",
         justLanded && "task-card-land",
       )}
       onAnimationEnd={() => {
@@ -203,8 +199,7 @@ function KanbanTaskCard({
           className="min-w-0 flex-1 text-left"
           onClick={() => onOpen(task)}
         >
-          <TaskCardLabels priority={task.priority} />
-          <p className="mt-2 text-base font-medium text-[#1c1917]">{task.title}</p>
+          <p className="text-base font-medium text-[#1c1917]">{task.title}</p>
           <div className="task-card-footer">
             <span className="text-sm text-[#78716c]">
               {task.approvalStatus === "Pending"
@@ -324,25 +319,30 @@ function KanbanLane({
         </div>
       ) : (
         <div className="lane-body">
-          <ul className="lane-task-list">
-            {tasks.map((task) => {
-              const interactive = canInteractWithTask(normalizedRole, task, userId);
-              return (
-                <KanbanTaskCard
-                  key={task.id}
-                  task={task}
-                  interactive={interactive}
-                  canApprove={canApprove}
-                  onOpen={onOpenTask}
-                  onApprove={onApprove}
-                  onReject={onReject}
-                  isDragging={activeTaskId === task.id}
-                  justLanded={landingTaskId === task.id}
-                  onLandAnimationEnd={onLandAnimationEnd}
-                />
-              );
-            })}
-          </ul>
+          <SortableContext
+            items={tasks.map((task) => task.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <ul className="lane-task-list">
+              {tasks.map((task) => {
+                const interactive = canInteractWithTask(normalizedRole, task, userId);
+                return (
+                  <KanbanTaskCard
+                    key={task.id}
+                    task={task}
+                    interactive={interactive}
+                    canApprove={canApprove}
+                    onOpen={onOpenTask}
+                    onApprove={onApprove}
+                    onReject={onReject}
+                    isDragging={activeTaskId === task.id}
+                    justLanded={landingTaskId === task.id}
+                    onLandAnimationEnd={onLandAnimationEnd}
+                  />
+                );
+              })}
+            </ul>
+          </SortableContext>
         </div>
       )}
     </div>
@@ -391,7 +391,9 @@ export function TaskBoard({
   const groupedTasks = useMemo(
     () =>
       STATUSES.reduce<Record<TaskStatus, TaskSummary[]>>((acc, status) => {
-        acc[status] = visibleTasks.filter((task) => task.status === status);
+        acc[status] = visibleTasks
+          .filter((task) => task.status === status)
+          .sort((a, b) => a.sortOrder - b.sortOrder);
         return acc;
       }, { ToDo: [], InProgress: [], Review: [], Done: [] }),
     [visibleTasks],
@@ -448,7 +450,11 @@ export function TaskBoard({
     setLandingLane(null);
   }
 
-  async function handleMoveTask(taskId: string, status: TaskStatus) {
+  async function handleMoveTask(
+    taskId: string,
+    status: TaskStatus,
+    sortOrder: number,
+  ) {
     const task = tasks.find((item) => item.id === taskId);
     if (!task) {
       return;
@@ -459,7 +465,10 @@ export function TaskBoard({
         setError("You can only move tasks assigned to you.");
         return;
       }
-      if (!isForwardStatusTransition(task.status, status)) {
+      if (
+        task.status !== status &&
+        !isForwardStatusTransition(task.status, status)
+      ) {
         setError("You can only move a task forward.");
         return;
       }
@@ -472,15 +481,18 @@ export function TaskBoard({
           ? {
               ...item,
               status,
+              sortOrder,
               approvalStatus:
-                status === "Done" && !isManagerRole(role) ? "Pending" : item.approvalStatus,
+                status === "Done" && !isManagerRole(role) && task.status !== "Done"
+                  ? "Pending"
+                  : item.approvalStatus,
             }
           : item,
       ),
     );
 
     try {
-      const updated = await updateTaskStatus(taskId, status);
+      const updated = await moveTask(taskId, status, sortOrder);
       setTasks((current) =>
         current.map((item) => (item.id === taskId ? updated : item)),
       );
@@ -518,20 +530,61 @@ export function TaskBoard({
       return;
     }
 
-    let nextStatus = parseLaneStatus(event.over.id);
-    if (!nextStatus) {
-      const overTask = tasks.find((item) => item.id === event.over!.id);
-      nextStatus = overTask?.status ?? null;
-    }
-
     const task = tasks.find((item) => item.id === taskId);
-    if (!task || !nextStatus || task.status === nextStatus) {
+    if (!task) {
       return;
     }
 
-    setLandingTaskId(taskId);
-    setLandingLane(nextStatus);
-    void handleMoveTask(taskId, nextStatus);
+    const overId = String(event.over.id);
+    let targetStatus = parseLaneStatus(overId);
+    if (!targetStatus) {
+      const overTask = tasks.find((item) => item.id === overId);
+      targetStatus = overTask?.status ?? null;
+    }
+
+    if (!targetStatus) {
+      return;
+    }
+
+    const columnItems = groupedTasks[targetStatus];
+    let sortOrder: number;
+
+    if (task.status === targetStatus) {
+      const oldIndex = columnItems.findIndex((item) => item.id === taskId);
+      let newIndex = oldIndex;
+
+      if (parseLaneStatus(overId)) {
+        newIndex = columnItems.length - 1;
+      } else {
+        newIndex = columnItems.findIndex((item) => item.id === overId);
+      }
+
+      if (oldIndex < 0 || newIndex < 0 || oldIndex === newIndex) {
+        return;
+      }
+
+      const reordered = arrayMove(columnItems, oldIndex, newIndex);
+      sortOrder = sortOrderBetween(
+        reordered[newIndex - 1],
+        reordered[newIndex + 1],
+      );
+    } else {
+      const targetWithout = columnItems.filter((item) => item.id !== taskId);
+      let insertIndex = targetWithout.length;
+
+      if (!parseLaneStatus(overId)) {
+        const overIndex = targetWithout.findIndex((item) => item.id === overId);
+        if (overIndex >= 0) {
+          insertIndex = overIndex;
+        }
+      }
+
+      sortOrder = computeSortOrderForIndex(targetWithout, insertIndex);
+      setLandingTaskId(taskId);
+      setLandingLane(targetStatus);
+    }
+
+    void handleMoveTask(taskId, targetStatus, sortOrder);
   }
 
   function handleTaskCreated(created: TaskSummary) {
@@ -551,6 +604,7 @@ export function TaskBoard({
       ) : (
         <DndContext
           sensors={sensors}
+          collisionDetection={closestCenter}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
@@ -579,8 +633,7 @@ export function TaskBoard({
           <DragOverlay dropAnimation={dropAnimation}>
             {activeTask ? (
               <div className={cn("task-card task-card-overlay", taskCardClass(activeTask, true))}>
-                <TaskCardLabels priority={activeTask.priority} />
-                <p className="mt-2 text-base font-medium">{activeTask.title}</p>
+                <p className="text-base font-medium">{activeTask.title}</p>
               </div>
             ) : null}
           </DragOverlay>

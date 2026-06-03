@@ -77,6 +77,11 @@ public class CreateTaskCommandHandler
             }
         }
 
+        var maxSortOrder = await _context.TaskItems
+            .Where(t => t.ProjectId == request.ProjectId && t.Status == TaskStatusEnum.ToDo)
+            .Select(t => (int?)t.SortOrder)
+            .MaxAsync(cancellationToken) ?? 0;
+
         var task = new TaskItem
         {
             ProjectId = request.ProjectId,
@@ -86,6 +91,7 @@ public class CreateTaskCommandHandler
                 : request.Description.Trim(),
             Priority = request.Priority,
             Status = TaskStatusEnum.ToDo,
+            SortOrder = maxSortOrder + 1000,
             AssigneeId = request.AssigneeId,
         };
 

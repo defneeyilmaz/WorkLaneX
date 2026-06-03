@@ -62,7 +62,9 @@ public class ListTasksByProjectQueryHandler
         var tasks = await _context.TaskItems
             .AsNoTracking()
             .Where(t => t.ProjectId == request.ProjectId)
-            .OrderByDescending(t => t.CreatedAt)
+            .OrderBy(t => t.Status)
+            .ThenBy(t => t.SortOrder)
+            .ThenBy(t => t.CreatedAt)
             .ToListAsync(cancellationToken);
 
         var assigneeIds = tasks

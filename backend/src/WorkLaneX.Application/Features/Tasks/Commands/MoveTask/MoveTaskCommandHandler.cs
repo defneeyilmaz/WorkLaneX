@@ -6,10 +6,10 @@ using WorkLaneX.Application.Common.Models;
 using WorkLaneX.Domain.Enums;
 using TaskStatusEnum = WorkLaneX.Domain.Enums.TaskStatus;
 
-namespace WorkLaneX.Application.Features.Tasks.Commands.UpdateTaskStatus;
+namespace WorkLaneX.Application.Features.Tasks.Commands.MoveTask;
 
-public class UpdateTaskStatusCommandHandler
-    : IRequestHandler<UpdateTaskStatusCommand, OperationResult<TaskSummary>>
+public class MoveTaskCommandHandler
+    : IRequestHandler<MoveTaskCommand, OperationResult<TaskSummary>>
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
@@ -17,7 +17,7 @@ public class UpdateTaskStatusCommandHandler
     private readonly IUserDirectory _userDirectory;
     private readonly IActivityLogService _activityLog;
 
-    public UpdateTaskStatusCommandHandler(
+    public MoveTaskCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUser,
         IWorkspaceAuthorizationService authorization,
@@ -32,7 +32,7 @@ public class UpdateTaskStatusCommandHandler
     }
 
     public async Task<OperationResult<TaskSummary>> Handle(
-        UpdateTaskStatusCommand request,
+        MoveTaskCommand request,
         CancellationToken cancellationToken)
     {
         var userId = _currentUser.UserId;
@@ -77,7 +77,8 @@ public class UpdateTaskStatusCommandHandler
                     "You can only update tasks assigned to you.");
             }
 
-            if (!_authorization.IsForwardStatusTransition(task.Status, request.Status))
+            if (task.Status != request.Status &&
+                !_authorization.IsForwardStatusTransition(task.Status, request.Status))
             {
                 return OperationResult<TaskSummary>.Failure(
                     "You can only move a task forward to a later status.");
@@ -91,49 +92,35 @@ public class UpdateTaskStatusCommandHandler
 
         var previousStatus = task.Status;
         task.Status = request.Status;
+        task.SortOrder = request.SortOrder;
         task.UpdatedAt = DateTime.UtcNow;
 
         if (previousStatus != request.Status)
         {
-            var maxSortOrder = await _context.TaskItems
-                .Where(t =>
-                    t.ProjectId == task.ProjectId &&
-                    t.Status == request.Status &&
-                    t.Id != task.Id)
-                .Select(t => (int?)t.SortOrder)
-                .MaxAsync(cancellationToken) ?? 0;
-            task.SortOrder = maxSortOrder + 1000;
-        }
-
-        if (request.Status == TaskStatusEnum.Done)
-        {
-            if (membership.Role == WorkspaceRole.Member)
+            if (request.Status == TaskStatusEnum.Done)
             {
-                task.ApprovalStatus = TaskApprovalStatus.Pending;
-                task.CompletionNote = string.IsNullOrWhiteSpace(request.CompletionNote)
-                    ? null
-                    : request.CompletionNote.Trim();
+                if (membership.Role == WorkspaceRole.Member)
+                {
+                    task.ApprovalStatus = TaskApprovalStatus.Pending;
+                }
+                else
+                {
+                    task.ApprovalStatus = TaskApprovalStatus.Approved;
+                    task.ApprovedAt = DateTime.UtcNow;
+                    task.ApprovedById = userId.Value;
+                }
+
+                task.RejectionNote = null;
             }
             else
             {
-                task.ApprovalStatus = TaskApprovalStatus.Approved;
-                task.ApprovedAt = DateTime.UtcNow;
-                task.ApprovedById = userId.Value;
+                task.ApprovalStatus = TaskApprovalStatus.None;
+                task.CompletionNote = null;
+                task.RejectionNote = null;
+                task.ApprovedAt = null;
+                task.ApprovedById = null;
             }
 
-            task.RejectionNote = null;
-        }
-        else
-        {
-            task.ApprovalStatus = TaskApprovalStatus.None;
-            task.CompletionNote = null;
-            task.RejectionNote = null;
-            task.ApprovedAt = null;
-            task.ApprovedById = null;
-        }
-
-        if (previousStatus != request.Status)
-        {
             _activityLog.Record(
                 task.Id,
                 project.Id,

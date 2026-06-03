@@ -12,6 +12,7 @@ export type TaskSummary = {
   title: string;
   description: string | null;
   status: TaskStatus;
+  sortOrder: number;
   priority: TaskPriority;
   createdAt: string;
   assigneeId: string | null;
@@ -23,7 +24,10 @@ export type TaskSummary = {
 
 export async function fetchProjectTasks(projectId: string): Promise<TaskSummary[]> {
   const { data } = await api.get<TaskSummary[]>(`/api/projects/${projectId}/tasks`);
-  return data;
+  return data.map((task, index) => ({
+    ...task,
+    sortOrder: typeof task.sortOrder === "number" ? task.sortOrder : (index + 1) * 1000,
+  }));
 }
 
 export async function createTask(
@@ -52,6 +56,50 @@ export async function updateTaskStatus(
     completionNote: completionNote?.trim() || null,
   });
   return data;
+}
+
+export async function moveTask(
+  taskId: string,
+  status: TaskStatus,
+  sortOrder: number,
+): Promise<TaskSummary> {
+  const { data } = await api.patch<TaskSummary>(`/api/projects/tasks/${taskId}/move`, {
+    status,
+    sortOrder,
+  });
+  return data;
+}
+
+function normalizeSortOrder(value: number | undefined): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+export function sortOrderBetween(before?: TaskSummary, after?: TaskSummary): number {
+  if (!before && !after) {
+    return 1000;
+  }
+
+  const beforeOrder = before ? normalizeSortOrder(before.sortOrder) : null;
+  const afterOrder = after ? normalizeSortOrder(after.sortOrder) : null;
+
+  if (beforeOrder === null && afterOrder !== null) {
+    return Math.max(0, afterOrder - 1000);
+  }
+
+  if (beforeOrder !== null && afterOrder === null) {
+    return beforeOrder + 1000;
+  }
+
+  if (beforeOrder !== null && afterOrder !== null) {
+    const midpoint = Math.floor((beforeOrder + afterOrder) / 2);
+    return midpoint === beforeOrder ? beforeOrder + 500 : midpoint;
+  }
+
+  return 1000;
+}
+
+export function computeSortOrderForIndex(tasks: TaskSummary[], index: number): number {
+  return sortOrderBetween(tasks[index - 1], tasks[index]);
 }
 
 export type UpdateTaskInput = {
