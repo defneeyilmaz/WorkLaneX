@@ -1,9 +1,11 @@
 "use client";
 
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LayoutGrid, Rocket } from "lucide-react";
+import { LayoutDashboard, LayoutGrid, Rocket } from "lucide-react";
 
+import type { MainView } from "@/app/app/page";
 import { useAuth } from "@/components/auth-provider";
 import { MemberProjectSidebar } from "@/components/member-project-sidebar";
 import { SidebarProjectsNav } from "@/components/sidebar-projects-nav";
@@ -13,12 +15,16 @@ import { Button } from "@/components/ui/button";
 import { normalizeWorkspaceRole } from "@/lib/permissions";
 import type { ProjectSummary } from "@/lib/projects";
 import type { WorkspaceSummary } from "@/lib/workspaces";
+import { cn } from "@/lib/utils";
 
 type AppSidebarProps = {
   selectedWorkspace: WorkspaceSummary | null;
   selectedProjectId: string | null;
+  mainView: MainView;
   onSelectWorkspace: (workspace: WorkspaceSummary) => void;
   onSelectProject: (project: ProjectSummary) => void;
+  onShowDashboard: () => void;
+  onShowBoard: () => void;
 };
 
 function getInitials(name: string) {
@@ -30,11 +36,37 @@ function getInitials(name: string) {
     .toUpperCase();
 }
 
+function NavButton({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn("jira-nav-item", active && "jira-nav-item-active")}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
 export function AppSidebar({
   selectedWorkspace,
   selectedProjectId,
+  mainView,
   onSelectWorkspace,
   onSelectProject,
+  onShowDashboard,
+  onShowBoard,
 }: AppSidebarProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -79,6 +111,20 @@ export function AppSidebar({
 
         {selectedWorkspace && workspaceRole && !isMember ? (
           <>
+            <div className="space-y-1 px-2 pt-2">
+              <NavButton
+                active={mainView === "dashboard"}
+                onClick={onShowDashboard}
+                icon={<LayoutDashboard className="shrink-0" />}
+                label="Dashboard"
+              />
+              <NavButton
+                active={mainView === "board"}
+                onClick={onShowBoard}
+                icon={<LayoutGrid className="shrink-0" />}
+                label="Board"
+              />
+            </div>
             <SidebarProjectsNav
               workspaceId={selectedWorkspace.id}
               workspaceName={selectedWorkspace.name}
@@ -86,12 +132,6 @@ export function AppSidebar({
               selectedProjectId={selectedProjectId}
               onSelectProject={onSelectProject}
             />
-            <div className="px-2 pt-2">
-              <div className="jira-nav-item jira-nav-item-active pointer-events-none">
-                <LayoutGrid className="shrink-0" />
-                <span>Board</span>
-              </div>
-            </div>
             <WorkspaceMembersPanel
               workspaceId={selectedWorkspace.id}
               actorRole={workspaceRole}
@@ -103,8 +143,11 @@ export function AppSidebar({
           <MemberProjectSidebar
             selectedWorkspaceId={selectedWorkspace?.id ?? null}
             selectedProjectId={selectedProjectId}
+            mainView={mainView}
             onSelectWorkspace={onSelectWorkspace}
             onSelectProject={onSelectProject}
+            onShowDashboard={onShowDashboard}
+            onShowBoard={onShowBoard}
           />
         ) : null}
       </div>

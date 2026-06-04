@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { FolderKanban, LayoutGrid } from "lucide-react";
+import { FolderKanban, LayoutDashboard, LayoutGrid } from "lucide-react";
 
+import type { MainView } from "@/app/app/page";
 import { SidebarFlyoutSection } from "@/components/sidebar-flyout-section";
 import { cn } from "@/lib/utils";
 import { fetchMyWorkspaces, formatWorkspaceRole, type WorkspaceSummary } from "@/lib/workspaces";
@@ -11,15 +12,21 @@ import { fetchWorkspaceProjects, type ProjectSummary } from "@/lib/projects";
 type MemberProjectSidebarProps = {
   selectedWorkspaceId: string | null;
   selectedProjectId: string | null;
+  mainView: MainView;
   onSelectWorkspace: (workspace: WorkspaceSummary) => void;
   onSelectProject: (project: ProjectSummary) => void;
+  onShowDashboard: () => void;
+  onShowBoard: () => void;
 };
 
 export function MemberProjectSidebar({
   selectedWorkspaceId,
   selectedProjectId,
+  mainView,
   onSelectWorkspace,
   onSelectProject,
+  onShowDashboard,
+  onShowBoard,
 }: MemberProjectSidebarProps) {
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
@@ -40,17 +47,14 @@ export function MemberProjectSidebar({
     try {
       const data = await fetchWorkspaceProjects(workspaceId);
       setProjects(data);
-      if (data.length > 0) {
-        onSelectProject(data[0]);
-      }
     } catch {
       setError("Could not load projects.");
     }
-  }, [onSelectProject]);
+  }, []);
 
   useEffect(() => {
     if (selectedWorkspaceId) {
-      loadProjects(selectedWorkspaceId);
+      void loadProjects(selectedWorkspaceId);
     }
   }, [loadProjects, selectedWorkspaceId]);
 
@@ -81,6 +85,28 @@ export function MemberProjectSidebar({
           </select>
         </>
       ) : null}
+
+      <div className="space-y-1 px-2 pt-2">
+        <button
+          type="button"
+          onClick={onShowDashboard}
+          className={cn(
+            "jira-nav-item",
+            mainView === "dashboard" && "jira-nav-item-active",
+          )}
+        >
+          <LayoutDashboard className="shrink-0" />
+          <span>Dashboard</span>
+        </button>
+        <button
+          type="button"
+          onClick={onShowBoard}
+          className={cn("jira-nav-item", mainView === "board" && "jira-nav-item-active")}
+        >
+          <LayoutGrid className="shrink-0" />
+          <span>Board</span>
+        </button>
+      </div>
 
       <SidebarFlyoutSection title="Projects">
         {selectedWorkspace ? (
@@ -115,13 +141,6 @@ export function MemberProjectSidebar({
           </ul>
         )}
       </SidebarFlyoutSection>
-
-      <div className="px-2 pt-2">
-        <div className="jira-nav-item jira-nav-item-active pointer-events-none">
-          <LayoutGrid className="shrink-0" />
-          <span>Board</span>
-        </div>
-      </div>
     </>
   );
 }
