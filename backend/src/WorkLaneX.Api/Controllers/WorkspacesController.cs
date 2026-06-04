@@ -6,6 +6,7 @@ using WorkLaneX.Application.Features.Projects.Commands.CreateProject;
 using WorkLaneX.Application.Features.Projects.Queries.ListProjectsByWorkspace;
 using WorkLaneX.Application.Features.Workspaces.Commands.AddWorkspaceMember;
 using WorkLaneX.Application.Features.Workspaces.Commands.CreateWorkspace;
+using WorkLaneX.Application.Features.Dashboard.Queries.GetWorkspaceDashboard;
 using WorkLaneX.Application.Features.Workspaces.Queries.ListMyWorkspaces;
 using WorkLaneX.Application.Features.Workspaces.Queries.ListWorkspaceMembers;
 using WorkLaneX.Domain.Enums;
@@ -53,6 +54,23 @@ public class WorkspacesController : ControllerBase
         {
             return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
         }
+    }
+
+    [HttpGet("{workspaceId:guid}/dashboard")]
+    public async Task<IActionResult> GetDashboard(
+        Guid workspaceId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetWorkspaceDashboardQuery(workspaceId),
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return NotFound(new { error = result.Error });
+        }
+
+        return Ok(result.Value);
     }
 
     [HttpGet("{workspaceId:guid}/projects")]
