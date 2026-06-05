@@ -11,4 +11,5 @@ public class Project : BaseEntity
     public string? Description { get; set; }
 
     public ICollection<TaskItem> Tasks { get; set; } = [];
+    public ICollection<ProjectDocument> Documents { get; set; } = [];
 }

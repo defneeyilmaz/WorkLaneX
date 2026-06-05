@@ -2,6 +2,11 @@ using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WorkLaneX.Application.Features.Documents.Commands.CreateProjectDocument;
+using WorkLaneX.Application.Features.Documents.Commands.DeleteProjectDocument;
+using WorkLaneX.Application.Features.Documents.Commands.UpdateProjectDocument;
+using WorkLaneX.Application.Features.Documents.Queries.GetProjectDocument;
+using WorkLaneX.Application.Features.Documents.Queries.ListProjectDocuments;
 using WorkLaneX.Application.Features.Tasks.Commands.AddTaskComment;
 using WorkLaneX.Application.Features.Tasks.Commands.ApproveTask;
 using WorkLaneX.Application.Features.Tasks.Commands.CreateTask;
@@ -254,6 +259,119 @@ public class ProjectsController : ControllerBase
             return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
         }
     }
+
+    [HttpGet("{projectId:guid}/documents")]
+    public async Task<IActionResult> ListDocuments(
+        Guid projectId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new ListProjectDocumentsQuery(projectId),
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return NotFound(new { error = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpGet("documents/{documentId:guid}")]
+    public async Task<IActionResult> GetDocument(
+        Guid documentId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetProjectDocumentQuery(documentId),
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return NotFound(new { error = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("{projectId:guid}/documents")]
+    public async Task<IActionResult> CreateDocument(
+        Guid projectId,
+        [FromBody] CreateProjectDocumentRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _mediator.Send(
+                new CreateProjectDocumentCommand(projectId, request.Title, request.Content),
+                cancellationToken);
+
+            if (!result.Succeeded)
+            {
+                var status = result.Error?.Contains("access", StringComparison.OrdinalIgnoreCase) == true
+                    ? StatusCodes.Status404NotFound
+                    : StatusCodes.Status400BadRequest;
+                return StatusCode(status, new { error = result.Error });
+            }
+
+            return CreatedAtAction(
+                nameof(GetDocument),
+                new { documentId = result.Value!.Id },
+                result.Value);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+        }
+    }
+
+    [HttpPatch("documents/{documentId:guid}")]
+    public async Task<IActionResult> UpdateDocument(
+        Guid documentId,
+        [FromBody] UpdateProjectDocumentRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _mediator.Send(
+                new UpdateProjectDocumentCommand(documentId, request.Title, request.Content),
+                cancellationToken);
+
+            if (!result.Succeeded)
+            {
+                var status = result.Error?.Contains("access", StringComparison.OrdinalIgnoreCase) == true
+                    ? StatusCodes.Status404NotFound
+                    : StatusCodes.Status400BadRequest;
+                return StatusCode(status, new { error = result.Error });
+            }
+
+            return Ok(result.Value);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+        }
+    }
+
+    [HttpDelete("documents/{documentId:guid}")]
+    public async Task<IActionResult> DeleteDocument(
+        Guid documentId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new DeleteProjectDocumentCommand(documentId),
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            var status = result.Error?.Contains("permission", StringComparison.OrdinalIgnoreCase) == true
+                ? StatusCodes.Status403Forbidden
+                : StatusCodes.Status404NotFound;
+            return StatusCode(status, new { error = result.Error });
+        }
+
+        return NoContent();
+    }
 }
 
 public record CreateTaskRequest(
@@ -279,3 +397,7 @@ public record UpdateTaskRequest(
 public record RejectTaskRequest(string RejectionNote);
 
 public record AddTaskCommentRequest(string Body);
+
+public record CreateProjectDocumentRequest(string Title, string? Content = null);
+
+public record UpdateProjectDocumentRequest(string? Title = null, string? Content = null);
