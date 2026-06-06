@@ -389,6 +389,82 @@
     @apply rounded-lg border border-[#e7e5e4] bg-[#fafaf9] px-3 py-3 transition-colors hover:border-[#ea580c]/40 hover:bg-white;
   }
 
+  .docs-editor-textarea {
+    @apply min-h-[320px] w-full resize-y rounded-lg border border-[#e7e5e4] bg-[#fafaf9] px-3 py-2.5 font-mono text-sm text-[#1c1917] outline-none transition-colors placeholder:text-[#a8a29e] focus:border-[#ea580c]/50 focus:bg-white;
+  }
+
+  .docs-editor-tabs {
+    @apply inline-flex rounded-lg border border-[#e7e5e4] bg-[#fafaf9] p-0.5;
+  }
+
+  .docs-editor-tab {
+    @apply rounded-md px-3 py-1.5 text-sm font-medium text-[#78716c] transition-colors hover:text-[#1c1917];
+  }
+
+  .docs-editor-tab-active {
+    @apply bg-white text-[#1c1917] shadow-[0_1px_1px_rgba(28,25,23,0.06)];
+  }
+
+  .docs-markdown-preview {
+    @apply min-h-[320px] rounded-lg border border-[#e7e5e4] bg-white px-4 py-3 text-sm text-[#1c1917];
+  }
+
+  .docs-markdown-empty {
+    @apply flex items-center justify-center text-[#a8a29e] italic;
+  }
+
+  .docs-markdown-preview h1 {
+    @apply mb-3 text-2xl font-semibold;
+  }
+
+  .docs-markdown-preview h2 {
+    @apply mb-2 mt-5 text-lg font-semibold;
+  }
+
+  .docs-markdown-preview h3 {
+    @apply mb-2 mt-4 text-base font-semibold;
+  }
+
+  .docs-markdown-preview p {
+    @apply mb-3 leading-relaxed;
+  }
+
+  .docs-markdown-preview ul {
+    @apply mb-3 list-disc space-y-1 pl-5;
+  }
+
+  .docs-markdown-preview ol {
+    @apply mb-3 list-decimal space-y-1 pl-5;
+  }
+
+  .docs-markdown-preview li {
+    @apply leading-relaxed;
+  }
+
+  .docs-markdown-preview a {
+    @apply text-[#ea580c] underline underline-offset-2;
+  }
+
+  .docs-markdown-preview code {
+    @apply rounded bg-[#f5f5f4] px-1 py-0.5 font-mono text-[0.85em];
+  }
+
+  .docs-markdown-preview pre {
+    @apply mb-3 overflow-x-auto rounded-lg bg-[#1c1917] p-3 text-[#fafaf9];
+  }
+
+  .docs-markdown-preview pre code {
+    @apply bg-transparent p-0 text-inherit;
+  }
+
+  .docs-markdown-preview blockquote {
+    @apply mb-3 border-l-4 border-[#ea580c]/40 pl-3 text-[#57534e];
+  }
+
+  .docs-markdown-preview hr {
+    @apply my-4 border-[#e7e5e4];
+  }
+
   .kanban-lane {
     @apply flex flex-col rounded-md p-2.5 transition-[transform,box-shadow,background-color] duration-200 ease-out;
     background: var(--jira-lane);

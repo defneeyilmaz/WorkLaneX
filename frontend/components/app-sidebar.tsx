@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { LayoutDashboard, LayoutGrid, Rocket } from "lucide-react";
+import { FileText, LayoutDashboard, LayoutGrid, Rocket } from "lucide-react";
 
 import type { MainView } from "@/app/app/page";
 import { useAuth } from "@/components/auth-provider";
@@ -25,6 +25,7 @@ type AppSidebarProps = {
   onSelectProject: (project: ProjectSummary) => void;
   onShowDashboard: () => void;
   onShowBoard: () => void;
+  onShowDocs: () => void;
 };
 
 function getInitials(name: string) {
@@ -67,6 +68,7 @@ export function AppSidebar({
   onSelectProject,
   onShowDashboard,
   onShowBoard,
+  onShowDocs,
 }: AppSidebarProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -124,6 +126,12 @@ export function AppSidebar({
                 icon={<LayoutGrid className="shrink-0" />}
                 label="Board"
               />
+              <NavButton
+                active={mainView === "docs"}
+                onClick={onShowDocs}
+                icon={<FileText className="shrink-0" />}
+                label="Docs"
+              />
             </div>
             <SidebarProjectsNav
               workspaceId={selectedWorkspace.id}
@@ -148,6 +156,7 @@ export function AppSidebar({
             onSelectProject={onSelectProject}
             onShowDashboard={onShowDashboard}
             onShowBoard={onShowBoard}
+            onShowDocs={onShowDocs}
           />
         ) : null}
       </div>

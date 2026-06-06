@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { FolderKanban, LayoutDashboard, LayoutGrid } from "lucide-react";
+import { FileText, FolderKanban, LayoutDashboard, LayoutGrid } from "lucide-react";
 
 import type { MainView } from "@/app/app/page";
 import { SidebarFlyoutSection } from "@/components/sidebar-flyout-section";
@@ -17,6 +17,7 @@ type MemberProjectSidebarProps = {
   onSelectProject: (project: ProjectSummary) => void;
   onShowDashboard: () => void;
   onShowBoard: () => void;
+  onShowDocs: () => void;
 };
 
 export function MemberProjectSidebar({
@@ -27,6 +28,7 @@ export function MemberProjectSidebar({
   onSelectProject,
   onShowDashboard,
   onShowBoard,
+  onShowDocs,
 }: MemberProjectSidebarProps) {
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
@@ -105,6 +107,14 @@ export function MemberProjectSidebar({
         >
           <LayoutGrid className="shrink-0" />
           <span>Board</span>
+        </button>
+        <button
+          type="button"
+          onClick={onShowDocs}
+          className={cn("jira-nav-item", mainView === "docs" && "jira-nav-item-active")}
+        >
+          <FileText className="shrink-0" />
+          <span>Docs</span>
         </button>
       </div>
 

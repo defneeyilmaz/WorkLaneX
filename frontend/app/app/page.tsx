@@ -5,13 +5,14 @@ import { MoreHorizontal, Search } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { DashboardView } from "@/components/dashboard-view";
+import { DocsView } from "@/components/docs-view";
 import { TaskBoard } from "@/components/task-board";
 import { useAuth } from "@/components/auth-provider";
 import { normalizeWorkspaceRole } from "@/lib/permissions";
 import { fetchWorkspaceProjects, type ProjectSummary } from "@/lib/projects";
 import type { WorkspaceSummary } from "@/lib/workspaces";
 
-export type MainView = "dashboard" | "board";
+export type MainView = "dashboard" | "board" | "docs";
 
 export default function AppPage() {
   const { user } = useAuth();
@@ -60,6 +61,14 @@ export default function AppPage() {
 
   const showBoard = mainView === "board" && selectedProject && selectedWorkspace;
   const showDashboard = mainView === "dashboard" && selectedWorkspace;
+  const showDocs = mainView === "docs" && selectedProject && selectedWorkspace;
+
+  const headerTitle =
+    mainView === "dashboard"
+      ? "Dashboard"
+      : mainView === "docs"
+        ? "Docs"
+        : "Board";
 
   return (
     <div className="jira-shell app-layout">
@@ -71,16 +80,15 @@ export default function AppPage() {
         onSelectProject={handleSelectProject}
         onShowDashboard={() => setMainView("dashboard")}
         onShowBoard={() => setMainView("board")}
+        onShowDocs={() => setMainView("docs")}
       />
 
       <div className="jira-main">
         <header className="jira-board-header">
           <div className="flex items-center justify-between gap-4">
-            <h1 className="text-2xl font-semibold text-[#1c1917]">
-              {mainView === "dashboard" ? "Dashboard" : "Board"}
-            </h1>
+            <h1 className="text-2xl font-semibold text-[#1c1917]">{headerTitle}</h1>
             <div className="flex items-center gap-2">
-              {showBoard && selectedProject ? (
+              {(showBoard || showDocs) && selectedProject ? (
                 <span className="jira-filter-btn cursor-default">
                   {selectedProject.name}
                 </span>
@@ -134,11 +142,20 @@ export default function AppPage() {
               userId={user.id}
               searchQuery={searchQuery}
             />
-          ) : mainView === "board" ? (
+          ) : showDocs && user && workspaceRole ? (
+            <DocsView
+              key={selectedProject.id}
+              projectId={selectedProject.id}
+              projectName={selectedProject.name}
+              workspaceRole={workspaceRole}
+              userId={user.id}
+            />
+          ) : mainView === "board" || mainView === "docs" ? (
             <div className="jira-empty">
               <p className="text-lg font-medium text-[#1c1917]">Select a project</p>
               <p className="mt-1.5 text-base text-[#78716c]">
-                Pick a project from the sidebar to open its board.
+                Pick a project from the sidebar to open{" "}
+                {mainView === "docs" ? "its docs" : "its board"}.
               </p>
             </div>
           ) : null}
