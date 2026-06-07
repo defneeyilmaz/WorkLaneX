@@ -21,7 +21,8 @@ builder.Services.AddCors(options =>
                 "http://localhost:3001",
                 "http://127.0.0.1:3001")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -30,6 +31,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 builder.Services.AddInfrastructure(connectionString, builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddWorkLaneXSignalR(builder.Environment);
 
 var app = builder.Build();
 
@@ -43,5 +45,6 @@ app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapWorkLaneXHubs();
 
 app.Run();
