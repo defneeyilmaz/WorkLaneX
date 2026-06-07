@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using WorkLaneX.Application;
 using WorkLaneX.Application.Common.Interfaces;
 using WorkLaneX.Application.Common.Settings;
+using WorkLaneX.Infrastructure.Ai;
 using WorkLaneX.Infrastructure.Auth;
 using WorkLaneX.Infrastructure.Identity;
 using WorkLaneX.Infrastructure.Persistence;
@@ -22,6 +23,15 @@ public static class DependencyInjection
         services.AddApplication();
 
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.Configure<OpenAiSettings>(configuration.GetSection(OpenAiSettings.SectionName));
+
+        services.AddHttpClient<IAiTaskBreakdownService, OpenAiTaskBreakdownService>((sp, client) =>
+        {
+            var settings = sp.GetRequiredService<
+                Microsoft.Extensions.Options.IOptions<OpenAiSettings>>().Value;
+            client.Timeout = TimeSpan.FromSeconds(Math.Clamp(settings.TimeoutSeconds, 10, 60));
+        });
+
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IUserAccountService, UserAccountService>();
         services.AddScoped<IUserDirectory, UserDirectory>();
