@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using WorkLaneX.Application.Common.Interfaces;
 using WorkLaneX.Application.Common.Mapping;
 using WorkLaneX.Application.Common.Models;
+using WorkLaneX.Application.Common.Models.Realtime;
+using WorkLaneX.Application.Common.Services;
 using WorkLaneX.Domain.Enums;
 
 namespace WorkLaneX.Application.Features.Tasks.Commands.ApproveTask;
@@ -15,19 +17,22 @@ public class ApproveTaskCommandHandler
     private readonly IWorkspaceAuthorizationService _authorization;
     private readonly IUserDirectory _userDirectory;
     private readonly IActivityLogService _activityLog;
+    private readonly IProjectRealtimeNotifier _realtime;
 
     public ApproveTaskCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUser,
         IWorkspaceAuthorizationService authorization,
         IUserDirectory userDirectory,
-        IActivityLogService activityLog)
+        IActivityLogService activityLog,
+        IProjectRealtimeNotifier realtime)
     {
         _context = context;
         _currentUser = currentUser;
         _authorization = authorization;
         _userDirectory = userDirectory;
         _activityLog = activityLog;
+        _realtime = realtime;
     }
 
     public async Task<OperationResult<TaskSummary>> Handle(
@@ -93,7 +98,15 @@ public class ApproveTaskCommandHandler
             task.AssigneeId is Guid assigneeId ? [assigneeId] : [],
             cancellationToken);
 
-        return OperationResult<TaskSummary>.Success(
-            TaskSummaryMapper.ToSummary(task, userNames));
+        var summary = TaskSummaryMapper.ToSummary(task, userNames);
+
+        await ProjectRealtimePublisher.SendTaskEventAsync(
+            _realtime,
+            userId.Value,
+            summary,
+            RealtimeEventNames.TaskUpdated,
+            cancellationToken);
+
+        return OperationResult<TaskSummary>.Success(summary);
     }
 }

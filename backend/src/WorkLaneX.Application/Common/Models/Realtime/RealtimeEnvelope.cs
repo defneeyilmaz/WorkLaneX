@@ -1,3 +1,3 @@
 namespace WorkLaneX.Application.Common.Models.Realtime;
 
-public record RealtimeEnvelope(string Event, object Payload);
+public record RealtimeEnvelope(string Event, object Payload, Guid ActorId);

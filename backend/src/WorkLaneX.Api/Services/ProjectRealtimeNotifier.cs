@@ -18,9 +18,10 @@ public class ProjectRealtimeNotifier : IProjectRealtimeNotifier
         Guid projectId,
         string eventName,
         object payload,
+        Guid actorId,
         CancellationToken cancellationToken = default)
     {
-        var envelope = new RealtimeEnvelope(eventName, payload);
+        var envelope = new RealtimeEnvelope(eventName, payload, actorId);
 
         return _hubContext.Clients
             .Group(ProjectHub.GroupName(projectId))

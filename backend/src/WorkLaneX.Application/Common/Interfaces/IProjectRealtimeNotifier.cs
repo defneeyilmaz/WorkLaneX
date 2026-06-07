@@ -6,5 +6,6 @@ public interface IProjectRealtimeNotifier
         Guid projectId,
         string eventName,
         object payload,
+        Guid actorId,
         CancellationToken cancellationToken = default);
 }

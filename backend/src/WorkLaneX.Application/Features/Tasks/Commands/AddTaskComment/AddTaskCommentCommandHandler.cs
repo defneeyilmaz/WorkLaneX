@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using WorkLaneX.Application.Common.Interfaces;
 using WorkLaneX.Application.Common.Models;
+using WorkLaneX.Application.Common.Models.Realtime;
 using WorkLaneX.Domain.Entities;
 using WorkLaneX.Domain.Enums;
 
@@ -15,19 +16,22 @@ public class AddTaskCommentCommandHandler
     private readonly IWorkspaceAuthorizationService _authorization;
     private readonly IUserDirectory _userDirectory;
     private readonly IActivityLogService _activityLog;
+    private readonly IProjectRealtimeNotifier _realtime;
 
     public AddTaskCommentCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUser,
         IWorkspaceAuthorizationService authorization,
         IUserDirectory userDirectory,
-        IActivityLogService activityLog)
+        IActivityLogService activityLog,
+        IProjectRealtimeNotifier realtime)
     {
         _context = context;
         _currentUser = currentUser;
         _authorization = authorization;
         _userDirectory = userDirectory;
         _activityLog = activityLog;
+        _realtime = realtime;
     }
 
     public async Task<OperationResult<TaskCommentSummary>> Handle(
@@ -80,6 +84,13 @@ public class AddTaskCommentCommandHandler
             preview);
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _realtime.SendToProjectAsync(
+            task.ProjectId,
+            RealtimeEventNames.TaskCommentAdded,
+            new { taskId = task.Id },
+            userId.Value,
+            cancellationToken);
 
         var authorNames = await _userDirectory.GetFullNamesAsync([userId.Value], cancellationToken);
 

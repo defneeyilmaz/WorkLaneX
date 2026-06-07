@@ -44,6 +44,7 @@ import {
   type TaskStatus,
   type TaskSummary,
 } from "@/lib/tasks";
+import { connectProjectRealtime } from "@/lib/project-realtime";
 import {
   fetchWorkspaceMembers,
   type WorkspaceMemberSummary,
@@ -412,6 +413,18 @@ export function TaskBoard({
     }
   }, [projectId]);
 
+  const refreshTasksQuietly = useCallback(async () => {
+    try {
+      const data = await fetchProjectTasks(projectId);
+      setTasks(data);
+      setSelectedTask((current) =>
+        current ? data.find((task) => task.id === current.id) ?? current : null,
+      );
+    } catch {
+      // Ignore background refresh errors.
+    }
+  }, [projectId]);
+
   const loadMembers = useCallback(async () => {
     if (!isManagerRole(role)) {
       return;
@@ -428,6 +441,32 @@ export function TaskBoard({
     loadTasks();
     loadMembers();
   }, [loadTasks, loadMembers]);
+
+  useEffect(() => {
+    let disconnect: (() => Promise<void>) | undefined;
+    let cancelled = false;
+
+    void connectProjectRealtime(projectId, (envelope) => {
+      if (envelope.actorId === userId) {
+        return;
+      }
+
+      if (envelope.event.startsWith("task.")) {
+        void refreshTasksQuietly();
+      }
+    }).then((cleanup) => {
+      if (cancelled) {
+        void cleanup();
+        return;
+      }
+      disconnect = cleanup;
+    });
+
+    return () => {
+      cancelled = true;
+      void disconnect?.();
+    };
+  }, [projectId, refreshTasksQuietly, userId]);
 
   function handleOpenTask(task: TaskSummary) {
     setSelectedTask(task);
