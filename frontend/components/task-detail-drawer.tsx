@@ -2,11 +2,16 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { X } from "lucide-react";
+import { Sparkles, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  breakDownTask,
+  getAiErrorMessage,
+  type TaskBreakdownResult,
+} from "@/lib/ai";
 import {
   canApproveTasks,
   canInteractWithTask,
@@ -86,6 +91,9 @@ export function TaskDetailDrawer({
   const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
   const [activity, setActivity] = useState<ActivityLogSummary[]>([]);
   const [activityLoading, setActivityLoading] = useState(false);
+  const [breakdown, setBreakdown] = useState<TaskBreakdownResult | null>(null);
+  const [breakdownLoading, setBreakdownLoading] = useState(false);
+  const [breakdownError, setBreakdownError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -125,6 +133,8 @@ export function TaskDetailDrawer({
     setError(null);
     setCommentBody("");
     setCommentError(null);
+    setBreakdown(null);
+    setBreakdownError(null);
   }, [task]);
 
   const loadComments = useCallback(async () => {
@@ -235,6 +245,24 @@ export function TaskDetailDrawer({
       setCommentError(getTaskCommentErrorMessage(err));
     } finally {
       setIsCommentSubmitting(false);
+    }
+  }
+
+  async function handleBreakDown() {
+    if (!task) {
+      return;
+    }
+
+    setBreakdownError(null);
+    setBreakdownLoading(true);
+    try {
+      const result = await breakDownTask(task.id);
+      setBreakdown(result);
+    } catch (err) {
+      setBreakdown(null);
+      setBreakdownError(getAiErrorMessage(err));
+    } finally {
+      setBreakdownLoading(false);
     }
   }
 
@@ -460,6 +488,62 @@ export function TaskDetailDrawer({
                 You can view this task but only edit tasks assigned to you.
               </p>
             )}
+
+            <div className="space-y-3 border-t border-[#e7e5e4] pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-[#1c1917]">AI subtasks</p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={breakdownLoading}
+                  onClick={() => void handleBreakDown()}
+                >
+                  <Sparkles className="size-4" />
+                  {breakdownLoading ? "Generating…" : "Break into subtasks"}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Suggestions only — they are not added to the board automatically.
+              </p>
+              {breakdownError ? (
+                <p className="text-sm text-destructive" role="alert">
+                  {breakdownError}
+                </p>
+              ) : null}
+              {breakdown?.usedMockProvider ? (
+                <p className="rounded-lg border border-amber-200 bg-amber-50/80 px-3 py-2 text-xs text-amber-950">
+                  Demo mode: add an OpenAI API key for live suggestions.
+                </p>
+              ) : null}
+              {breakdown && breakdown.subtasks.length > 0 ? (
+                <ul className="space-y-2">
+                  {breakdown.subtasks.map((subtask, index) => (
+                    <li
+                      key={`${subtask.title}-${index}`}
+                      className="rounded-lg border border-[#e7e5e4] bg-[#fafaf9] px-3 py-2.5 text-sm"
+                    >
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-semibold text-[#1c1917]">{subtask.title}</p>
+                        <span
+                          className={cn(
+                            "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                            PRIORITY_STRIPE[subtask.priority],
+                          )}
+                        >
+                          {subtask.priority}
+                        </span>
+                      </div>
+                      {subtask.description ? (
+                        <p className="mt-1 text-[#44403c]">{subtask.description}</p>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              ) : breakdown && !breakdownLoading ? (
+                <p className="text-sm text-muted-foreground">No subtasks suggested.</p>
+              ) : null}
+            </div>
 
             <div className="space-y-3 border-t border-[#e7e5e4] pt-4">
               <p className="text-sm font-semibold text-[#1c1917]">Activity</p>
