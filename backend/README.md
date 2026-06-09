@@ -33,6 +33,17 @@ docker compose -f docker/docker-compose.yml up -d
 
 Health check: `GET /api/health`
 
+## Demo data (development)
+
+On startup in Development, the API seeds a demo account if it does not exist yet:
+
+| Field | Value |
+|-------|-------|
+| Email | `defne.demo@worklanex.com` |
+| Password | `admin123` |
+
+The seed includes a workspace, project, kanban tasks, a doc, comments, and activity entries.
+
 Example response when the database is running:
 
 ```json

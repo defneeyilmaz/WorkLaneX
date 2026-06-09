@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using WorkLaneX.Api.Extensions;
 using WorkLaneX.Infrastructure;
+using WorkLaneX.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,5 +47,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 app.MapWorkLaneXHubs();
+
+await ApplicationDatabaseSeeder.SeedDevelopmentDataAsync(app.Services);
 
 app.Run();
