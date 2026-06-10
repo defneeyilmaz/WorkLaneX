@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { FolderKanban, Inbox, Radio } from "lucide-react";
 
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
+import { Button } from "@/components/ui/button";
 import {
   fetchWorkspaceDashboard,
   getDashboardErrorMessage,
@@ -108,14 +112,20 @@ export function DashboardView({
   }, [loadDashboard]);
 
   if (isLoading) {
-    return <p className="text-base text-[#78716c]">Loading dashboard…</p>;
+    return <LoadingState label="Loading dashboard…" />;
   }
 
   if (error) {
     return (
-      <p className="rounded-md bg-[#ffebe6] px-3 py-2 text-sm text-[#bf2600]" role="alert">
-        {error}
-      </p>
+      <EmptyState
+        title="Could not load dashboard"
+        description={error}
+        action={
+          <Button type="button" size="sm" onClick={() => void loadDashboard()}>
+            Try again
+          </Button>
+        }
+      />
     );
   }
 
@@ -153,7 +163,12 @@ export function DashboardView({
         <section className="dashboard-panel">
           <h2 className="dashboard-panel-title">My tasks</h2>
           {data.myTasks.length === 0 ? (
-            <p className="text-sm text-[#78716c]">No open tasks assigned to you.</p>
+            <EmptyState
+              compact
+              icon={Inbox}
+              title="No open tasks assigned to you"
+              description="Tasks assigned to you will show up here."
+            />
           ) : (
             <ul className="space-y-2">
               {data.myTasks.map((task) => (
@@ -170,7 +185,12 @@ export function DashboardView({
         <section className="dashboard-panel">
           <h2 className="dashboard-panel-title">Recent activity</h2>
           {data.recentActivity.length === 0 ? (
-            <p className="text-sm text-[#78716c]">No activity yet.</p>
+            <EmptyState
+              compact
+              icon={Radio}
+              title="No activity yet"
+              description="Task updates and comments will appear here."
+            />
           ) : (
             <ul className="max-h-80 space-y-2 overflow-y-auto">
               {data.recentActivity.map((entry) => (
@@ -216,7 +236,12 @@ export function DashboardView({
       <section className="dashboard-panel">
         <h2 className="dashboard-panel-title">Projects</h2>
         {data.projects.length === 0 ? (
-          <p className="text-sm text-[#78716c]">No projects in this workspace.</p>
+          <EmptyState
+            compact
+            icon={FolderKanban}
+            title="No projects in this workspace"
+            description="Create a project from the sidebar to start tracking work."
+          />
         ) : (
           <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {data.projects.map((project) => (

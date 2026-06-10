@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, FileText, Plus, Trash2 } from "lucide-react";
 
+import { EmptyState } from "@/components/empty-state";
+import { LoadingState } from "@/components/loading-state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -297,19 +299,19 @@ export function DocsView({
 
       <section className="dashboard-panel">
         {isLoading ? (
-          <p className="text-sm text-[#78716c]">Loading documents…</p>
+          <LoadingState label="Loading documents…" />
         ) : documents.length === 0 ? (
-          <div className="py-8 text-center">
-            <FileText className="mx-auto size-10 text-[#d6d3d1]" />
-            <p className="mt-3 text-base font-medium text-[#1c1917]">No documents yet</p>
-            <p className="mt-1 text-sm text-[#78716c]">
-              Create a markdown doc for specs, notes, or release info.
-            </p>
-            <Button type="button" className="mt-4" onClick={openNewDocument}>
-              <Plus className="size-4" />
-              New document
-            </Button>
-          </div>
+          <EmptyState
+            icon={FileText}
+            title="No documents yet"
+            description="Create a markdown doc for specs, notes, or release info."
+            action={
+              <Button type="button" onClick={openNewDocument}>
+                <Plus className="size-4" />
+                New document
+              </Button>
+            }
+          />
         ) : (
           <ul className="space-y-2">
             {documents.map((doc) => (

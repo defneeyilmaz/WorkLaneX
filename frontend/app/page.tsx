@@ -2,45 +2,54 @@ import Link from "next/link";
 
 import { ApiHealthStatus } from "@/components/api-health-status";
 import { LandingActions } from "@/components/landing-actions";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { LandingFeatures } from "@/components/landing-features";
 
 export default function Home() {
   return (
-    <div className="flex min-h-full flex-col">
-      <header className="border-b border-border px-6 py-4">
-        <Link
-          href="/"
-          className="text-lg font-semibold tracking-tight hover:opacity-80"
-        >
+    <div className="landing-shell">
+      <header className="landing-header">
+        <Link href="/" className="landing-logo">
           WorkLaneX
         </Link>
+        <LandingActions />
       </header>
 
-      <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col justify-center px-6 py-16 md:py-20">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl md:text-3xl">
-              Team workspace for shipping together
-            </CardTitle>
-            <CardDescription>
-              Tasks, docs, and updates in one place for small software teams and
-              project groups.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ApiHealthStatus />
-          </CardContent>
-          <CardFooter className="flex flex-wrap gap-2">
-            <LandingActions />
-          </CardFooter>
-        </Card>
+      <main className="landing-main">
+        <section className="landing-hero">
+          <p className="landing-eyebrow">Team productivity workspace</p>
+          <h1 className="landing-title">
+            Plan, ship, and document work in one calm workspace
+          </h1>
+          <p className="landing-lead">
+            WorkLaneX combines kanban boards, project docs, dashboards, and AI
+            planning helpers for student teams, startups, and small software
+            groups — without enterprise Jira complexity.
+          </p>
+        </section>
+
+        <LandingFeatures />
+
+        <section className="landing-demo-card" aria-label="Demo account">
+          <p className="landing-demo-label">Local demo account</p>
+          <p className="landing-demo-copy">
+            Start the API in Development to auto-seed sample data, then sign in
+            with:
+          </p>
+          <dl className="landing-demo-credentials">
+            <div>
+              <dt>Email</dt>
+              <dd>defne.demo@worklanex.com</dd>
+            </div>
+            <div>
+              <dt>Password</dt>
+              <dd>admin123</dd>
+            </div>
+          </dl>
+        </section>
+
+        <div className="landing-health">
+          <ApiHealthStatus />
+        </div>
       </main>
     </div>
   );

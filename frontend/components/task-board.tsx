@@ -23,6 +23,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, GripVertical, Plus, X } from "lucide-react";
 
 import { CreateTaskDialog } from "@/components/create-task-dialog";
+import { LoadingState } from "@/components/loading-state";
 import { TaskDetailDrawer } from "@/components/task-detail-drawer";
 import { Button } from "@/components/ui/button";
 import {
@@ -639,7 +640,7 @@ export function TaskBoard({
       ) : null}
 
       {isLoading ? (
-        <p className="text-base text-[#78716c]">Loading tasks…</p>
+        <LoadingState label="Loading board…" />
       ) : (
         <DndContext
           sensors={sensors}

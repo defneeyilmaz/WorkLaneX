@@ -11,7 +11,7 @@ export function LandingActions() {
 
   if (isLoading) {
     return (
-      <Button disabled variant="outline">
+      <Button disabled size="sm" variant="outline">
         Loading…
       </Button>
     );
@@ -19,20 +19,23 @@ export function LandingActions() {
 
   if (isAuthenticated) {
     return (
-      <Link href="/app" className={cn(buttonVariants())}>
+      <Link href="/app" className={cn(buttonVariants({ size: "sm" }))}>
         Open workspace
       </Link>
     );
   }
 
   return (
-    <>
-      <Link href="/login" className={cn(buttonVariants())}>
+    <div className="flex flex-wrap items-center gap-2">
+      <Link href="/login" className={cn(buttonVariants({ size: "sm" }))}>
         Log in
       </Link>
-      <Link href="/register" className={cn(buttonVariants({ variant: "outline" }))}>
+      <Link
+        href="/register"
+        className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+      >
         Create account
       </Link>
-    </>
+    </div>
   );
 }

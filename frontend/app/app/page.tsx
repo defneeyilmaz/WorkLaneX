@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { MoreHorizontal, Search } from "lucide-react";
+import { FolderKanban, LayoutGrid, MoreHorizontal, Search } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { EmptyState } from "@/components/empty-state";
 import { DashboardView } from "@/components/dashboard-view";
 import { DocsView } from "@/components/docs-view";
 import { TaskBoard } from "@/components/task-board";
@@ -120,12 +121,11 @@ export default function AppPage() {
 
         <div className="jira-board-body">
           {!selectedWorkspace ? (
-            <div className="jira-empty">
-              <p className="text-lg font-medium text-[#1c1917]">Select a workspace</p>
-              <p className="mt-1.5 text-base text-[#78716c]">
-                Choose a workspace from the sidebar to get started.
-              </p>
-            </div>
+            <EmptyState
+              icon={LayoutGrid}
+              title="Select a workspace"
+              description="Choose a workspace from the sidebar to open the dashboard, board, or docs."
+            />
           ) : showDashboard && workspaceRole ? (
             <DashboardView
               workspaceId={selectedWorkspace.id}
@@ -151,13 +151,13 @@ export default function AppPage() {
               userId={user.id}
             />
           ) : mainView === "board" || mainView === "docs" ? (
-            <div className="jira-empty">
-              <p className="text-lg font-medium text-[#1c1917]">Select a project</p>
-              <p className="mt-1.5 text-base text-[#78716c]">
-                Pick a project from the sidebar to open{" "}
-                {mainView === "docs" ? "its docs" : "its board"}.
-              </p>
-            </div>
+            <EmptyState
+              icon={FolderKanban}
+              title="Select a project"
+              description={`Pick a project from the sidebar to open ${
+                mainView === "docs" ? "its docs" : "its board"
+              }.`}
+            />
           ) : null}
         </div>
       </div>

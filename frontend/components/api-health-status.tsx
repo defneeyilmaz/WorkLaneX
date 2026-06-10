@@ -36,12 +36,12 @@ export function ApiHealthStatus() {
 
   if (loading) {
     return (
-      <p className="text-xs text-muted-foreground">Checking API connection…</p>
+      <p className="text-sm text-[#78716c]">Checking API connection…</p>
     );
   }
 
   if (error) {
-    return <p className="text-xs text-destructive">{error}</p>;
+    return <p className="text-sm text-destructive">{error}</p>;
   }
 
   if (!health) {
@@ -52,7 +52,7 @@ export function ApiHealthStatus() {
 
   return (
     <p
-      className={`text-xs ${isHealthy ? "text-muted-foreground" : "text-amber-700 dark:text-amber-500"}`}
+      className={`text-sm ${isHealthy ? "text-[#57534e]" : "text-amber-800"}`}
     >
       API {health.status} · database {health.database}
     </p>
