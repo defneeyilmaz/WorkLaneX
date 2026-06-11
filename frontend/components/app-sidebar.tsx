@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FileText, LayoutDashboard, LayoutGrid, Rocket } from "lucide-react";
+import { FileText, LayoutDashboard, LayoutGrid, Rocket, X } from "lucide-react";
 
 import type { MainView } from "@/app/app/page";
 import { useAuth } from "@/components/auth-provider";
@@ -21,6 +21,8 @@ type AppSidebarProps = {
   selectedWorkspace: WorkspaceSummary | null;
   selectedProjectId: string | null;
   mainView: MainView;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
   onSelectWorkspace: (workspace: WorkspaceSummary) => void;
   onSelectProject: (project: ProjectSummary) => void;
   onShowDashboard: () => void;
@@ -53,6 +55,7 @@ function NavButton({
       type="button"
       onClick={onClick}
       className={cn("jira-nav-item", active && "jira-nav-item-active")}
+      aria-current={active ? "page" : undefined}
     >
       {icon}
       <span>{label}</span>
@@ -64,6 +67,8 @@ export function AppSidebar({
   selectedWorkspace,
   selectedProjectId,
   mainView,
+  mobileOpen = false,
+  onMobileClose,
   onSelectWorkspace,
   onSelectProject,
   onShowDashboard,
@@ -78,17 +83,56 @@ export function AppSidebar({
     : null;
   const isMember = workspaceRole === "Member";
 
+  function closeMobileNav() {
+    onMobileClose?.();
+  }
+
+  function handleSelectWorkspace(workspace: WorkspaceSummary) {
+    onSelectWorkspace(workspace);
+    closeMobileNav();
+  }
+
+  function handleSelectProject(project: ProjectSummary) {
+    onSelectProject(project);
+    closeMobileNav();
+  }
+
+  function handleShowDashboard() {
+    onShowDashboard();
+    closeMobileNav();
+  }
+
+  function handleShowBoard() {
+    onShowBoard();
+    closeMobileNav();
+  }
+
+  function handleShowDocs() {
+    onShowDocs();
+    closeMobileNav();
+  }
+
   function handleLogout() {
     logout();
     router.push("/");
   }
 
   return (
-    <aside className="jira-sidebar">
+    <aside className={cn("jira-sidebar", mobileOpen && "jira-sidebar-open")}>
       <div className="jira-sidebar-top">
-        <Link href="/" className="jira-sidebar-logo">
+        <Link href="/" className="jira-sidebar-logo" onClick={closeMobileNav}>
           WorkLaneX
         </Link>
+        {onMobileClose ? (
+          <button
+            type="button"
+            className="jira-sidebar-close"
+            onClick={closeMobileNav}
+            aria-label="Close navigation"
+          >
+            <X className="size-5" />
+          </button>
+        ) : null}
       </div>
 
       {selectedWorkspace ? (
@@ -108,7 +152,7 @@ export function AppSidebar({
       <div className="jira-sidebar-scroll">
         <WorkspacePanel
           selectedWorkspaceId={selectedWorkspace?.id ?? null}
-          onSelectWorkspace={onSelectWorkspace}
+          onSelectWorkspace={handleSelectWorkspace}
         />
 
         {selectedWorkspace && workspaceRole && !isMember ? (
@@ -116,19 +160,19 @@ export function AppSidebar({
             <div className="space-y-1 px-2 pt-2">
               <NavButton
                 active={mainView === "dashboard"}
-                onClick={onShowDashboard}
+                onClick={handleShowDashboard}
                 icon={<LayoutDashboard className="shrink-0" />}
                 label="Dashboard"
               />
               <NavButton
                 active={mainView === "board"}
-                onClick={onShowBoard}
+                onClick={handleShowBoard}
                 icon={<LayoutGrid className="shrink-0" />}
                 label="Board"
               />
               <NavButton
                 active={mainView === "docs"}
-                onClick={onShowDocs}
+                onClick={handleShowDocs}
                 icon={<FileText className="shrink-0" />}
                 label="Docs"
               />
@@ -138,7 +182,7 @@ export function AppSidebar({
               workspaceName={selectedWorkspace.name}
               workspaceRole={workspaceRole}
               selectedProjectId={selectedProjectId}
-              onSelectProject={onSelectProject}
+              onSelectProject={handleSelectProject}
             />
             <WorkspaceMembersPanel
               workspaceId={selectedWorkspace.id}
@@ -152,11 +196,11 @@ export function AppSidebar({
             selectedWorkspaceId={selectedWorkspace?.id ?? null}
             selectedProjectId={selectedProjectId}
             mainView={mainView}
-            onSelectWorkspace={onSelectWorkspace}
-            onSelectProject={onSelectProject}
-            onShowDashboard={onShowDashboard}
-            onShowBoard={onShowBoard}
-            onShowDocs={onShowDocs}
+            onSelectWorkspace={handleSelectWorkspace}
+            onSelectProject={handleSelectProject}
+            onShowDashboard={handleShowDashboard}
+            onShowBoard={handleShowBoard}
+            onShowDocs={handleShowDocs}
           />
         ) : null}
       </div>

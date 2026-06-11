@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { FolderKanban, LayoutGrid, MoreHorizontal, Search } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { FolderKanban, LayoutGrid, Menu, MoreHorizontal, Search } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { EmptyState } from "@/components/empty-state";
@@ -24,6 +24,28 @@ export default function AppPage() {
   );
   const [mainView, setMainView] = useState<MainView>("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (!sidebarOpen) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setSidebarOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [sidebarOpen]);
 
   const workspaceRole = selectedWorkspace
     ? normalizeWorkspaceRole(selectedWorkspace.role)
@@ -73,10 +95,21 @@ export default function AppPage() {
 
   return (
     <div className="jira-shell app-layout">
+      {sidebarOpen ? (
+        <button
+          type="button"
+          className="jira-sidebar-backdrop"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Close navigation"
+        />
+      ) : null}
+
       <AppSidebar
         selectedWorkspace={selectedWorkspace}
         selectedProjectId={selectedProject?.id ?? null}
         mainView={mainView}
+        mobileOpen={sidebarOpen}
+        onMobileClose={() => setSidebarOpen(false)}
         onSelectWorkspace={handleSelectWorkspace}
         onSelectProject={handleSelectProject}
         onShowDashboard={() => setMainView("dashboard")}
@@ -86,8 +119,18 @@ export default function AppPage() {
 
       <div className="jira-main">
         <header className="jira-board-header">
-          <div className="flex items-center justify-between gap-4">
-            <h1 className="text-2xl font-semibold text-[#1c1917]">{headerTitle}</h1>
+          <div className="flex items-center justify-between gap-3 sm:gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <button
+                type="button"
+                className="jira-mobile-menu-btn"
+                onClick={() => setSidebarOpen(true)}
+                aria-label="Open navigation"
+              >
+                <Menu className="size-5" />
+              </button>
+              <h1 className="jira-board-title">{headerTitle}</h1>
+            </div>
             <div className="flex items-center gap-2">
               {(showBoard || showDocs) && selectedProject ? (
                 <span className="jira-filter-btn cursor-default">

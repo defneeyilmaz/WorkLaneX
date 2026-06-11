@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 
 import { CreateWorkspaceDialog } from "@/components/create-workspace-dialog";
+import { LoadingState } from "@/components/loading-state";
 import { SidebarFlyoutSection } from "@/components/sidebar-flyout-section";
 import { cn } from "@/lib/utils";
 import {
@@ -85,7 +86,7 @@ export function WorkspacePanel({
         }
       >
         {isLoading ? (
-          <p className="sidebar-flyout-meta">Loading…</p>
+          <LoadingState inline label="Loading workspaces…" />
         ) : loadError ? (
           <p className="sidebar-flyout-meta text-[#bf2600]">{loadError}</p>
         ) : workspaces.length === 0 ? (

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FolderKanban, Plus } from "lucide-react";
 
 import { CreateProjectDialog } from "@/components/create-project-dialog";
+import { LoadingState } from "@/components/loading-state";
 import { SidebarFlyoutSection } from "@/components/sidebar-flyout-section";
 import { cn } from "@/lib/utils";
 import { canCreateProject, normalizeWorkspaceRole } from "@/lib/permissions";
@@ -89,7 +90,7 @@ export function SidebarProjectsNav({
         }
       >
         {isLoading ? (
-          <p className="sidebar-flyout-meta">Loading…</p>
+          <LoadingState inline label="Loading projects…" />
         ) : loadError ? (
           <p className="sidebar-flyout-meta text-[#bf2600]">{loadError}</p>
         ) : projects.length === 0 ? (

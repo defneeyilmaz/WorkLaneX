@@ -161,7 +161,11 @@
   }
 
   .jira-sidebar-top {
-    @apply flex items-center gap-2 px-5 py-5;
+    @apply flex items-center justify-between gap-2 px-5 py-5;
+  }
+
+  .jira-sidebar-close {
+    @apply hidden rounded-md p-1.5 text-white/90 transition-colors hover:bg-white/12 hover:text-white;
   }
 
   .jira-sidebar-logo {
@@ -314,7 +318,19 @@
   }
 
   .jira-board-header {
-    @apply border-b border-[#e7e5e4] bg-white px-6 py-5;
+    @apply border-b border-[#e7e5e4] bg-white px-4 py-4 sm:px-6 sm:py-5;
+  }
+
+  .jira-board-title {
+    @apply truncate text-xl font-semibold text-[#1c1917] sm:text-2xl;
+  }
+
+  .jira-mobile-menu-btn {
+    @apply inline-flex size-10 shrink-0 items-center justify-center rounded-md border border-[#e7e5e4] bg-white text-[#57534e] hover:bg-[#f5f5f4] lg:hidden;
+  }
+
+  .jira-sidebar-backdrop {
+    @apply fixed inset-0 z-[80] bg-[#1c1917]/45 lg:hidden;
   }
 
   .jira-board-toolbar {
@@ -330,7 +346,7 @@
   }
 
   .jira-board-body {
-    @apply px-6 py-6;
+    @apply px-4 py-4 sm:px-6 sm:py-6;
   }
 
   .jira-empty {
@@ -710,6 +726,22 @@
     @apply text-sm font-medium text-[#57534e];
   }
 
+  .loading-state-inline {
+    @apply flex items-center gap-2 px-2 py-3;
+  }
+
+  .loading-state-inline .loading-state-icon {
+    @apply size-4 text-[#ea580c];
+  }
+
+  .loading-state-inline .loading-state-label {
+    @apply text-sm text-[#78716c];
+  }
+
+  .app-session-shell {
+    @apply flex min-h-screen items-center justify-center bg-[#fafaf9] px-6 py-16;
+  }
+
   .empty-state {
     @apply text-center;
   }
@@ -828,5 +860,43 @@
 
   .landing-health {
     @apply rounded-lg border border-[#e7e5e4] bg-white px-4 py-3;
+  }
+
+  @media (max-width: 1023px) {
+    .jira-sidebar {
+      @apply fixed inset-y-0 left-0 z-[90] w-[min(300px,88vw)] -translate-x-full shadow-2xl transition-transform duration-200 ease-out;
+    }
+
+    .jira-sidebar.jira-sidebar-open {
+      @apply translate-x-0;
+    }
+
+    .jira-sidebar-close {
+      @apply inline-flex;
+    }
+
+    .jira-sidebar-logo {
+      @apply text-xl;
+    }
+
+    .jira-nav-item {
+      @apply py-2.5 text-base;
+    }
+
+    .jira-project-block p {
+      @apply text-base;
+    }
+
+    .jira-sidebar-footer .jira-user-row p {
+      @apply text-base;
+    }
+
+    .jira-search {
+      @apply min-w-0 w-full;
+    }
+
+    .jira-board-toolbar {
+      @apply flex-col items-stretch;
+    }
   }
 }

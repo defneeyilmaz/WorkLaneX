@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { useAuth } from "@/components/auth-provider";
+import { LoadingState } from "@/components/loading-state";
 
 export function GuestOnly({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -17,7 +18,9 @@ export function GuestOnly({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <p className="text-sm text-muted-foreground">Checking your session…</p>
+      <div className="app-session-shell">
+        <LoadingState label="Checking your session…" />
+      </div>
     );
   }
 

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
 import { useAuth } from "@/components/auth-provider";
+import { LoadingState } from "@/components/loading-state";
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
@@ -18,20 +19,22 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <p className="px-6 py-16 text-sm text-muted-foreground">
-        Loading your workspace…
-      </p>
+      <div className="app-session-shell">
+        <LoadingState label="Loading your workspace…" />
+      </div>
     );
   }
 
   if (!isAuthenticated) {
     return (
-      <p className="px-6 py-16 text-sm text-muted-foreground">
-        Redirecting to sign in…{" "}
-        <Link href="/login" className="underline">
-          Log in
-        </Link>
-      </p>
+      <div className="app-session-shell">
+        <p className="text-sm text-[#78716c]">
+          Redirecting to sign in…{" "}
+          <Link href="/login" className="font-medium text-[#ea580c] underline">
+            Log in
+          </Link>
+        </p>
+      </div>
     );
   }
 
