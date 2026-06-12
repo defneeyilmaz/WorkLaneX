@@ -1,9 +1,16 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.HttpOverrides;
 using WorkLaneX.Api.Extensions;
 using WorkLaneX.Infrastructure;
 using WorkLaneX.Infrastructure.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(port))
+{
+    builder.WebHost.UseUrls($"http://+:{port}");
+}
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -12,20 +19,15 @@ builder.Services.AddControllers()
     });
 builder.Services.AddOpenApi();
 
-builder.Services.AddCors(options =>
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    options.AddPolicy("Frontend", policy =>
-    {
-        policy.WithOrigins(
-                "http://localhost:3000",
-                "http://127.0.0.1:3000",
-                "http://localhost:3001",
-                "http://127.0.0.1:3001")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
 });
+
+builder.Services.AddWorkLaneXCors(builder.Configuration, builder.Environment);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? "Host=localhost;Port=5433;Database=worklanex;Username=postgres;Password=postgres";
@@ -36,9 +38,18 @@ builder.Services.AddWorkLaneXSignalR(builder.Environment);
 
 var app = builder.Build();
 
+if (!app.Environment.IsDevelopment())
+{
+    app.UseForwardedHeaders();
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+}
+else
+{
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();

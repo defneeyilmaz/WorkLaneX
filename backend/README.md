@@ -59,6 +59,29 @@ If PostgreSQL is stopped, `status` is `degraded` and `database` is `unavailable`
 
 OpenAPI document (development): `/openapi/v1.json`
 
+## Docker (production)
+
+Build the API image from the `backend/` directory:
+
+```bash
+cd backend
+docker build -t worklanex-api .
+```
+
+Run against a PostgreSQL instance (set env vars for your host):
+
+```bash
+docker run --rm -p 8080:8080 \
+  -e ConnectionStrings__DefaultConnection="Host=host.docker.internal;Port=5433;Database=worklanex;Username=postgres;Password=postgres" \
+  -e Jwt__Secret="REPLACE_WITH_A_LONG_RANDOM_SECRET_AT_LEAST_32_CHARS" \
+  -e Cors__AllowedOrigins__0="http://localhost:3000" \
+  worklanex-api
+```
+
+Health check: `GET http://localhost:8080/api/health`
+
+Copy `src/WorkLaneX.Api/appsettings.Production.example.json` as a reference for production settings. Demo seed data runs only in Development.
+
 ## Solution structure
 
 ```
