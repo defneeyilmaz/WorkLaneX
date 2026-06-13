@@ -13,6 +13,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+Set `NEXT_PUBLIC_API_URL` in `.env.local` (see `.env.example`). For production deploy, see [`../DEPLOY.md`](../DEPLOY.md).
+
 ## UI components
 
 shadcn/ui is configured in `components.json`. Primitives live under `components/ui/` (button, input, card, label).

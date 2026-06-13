@@ -15,6 +15,18 @@ public static class ApplicationDatabaseSeeder
     public const string DemoEmail = "defne.demo@worklanex.com";
     public const string DemoPassword = "admin123";
 
+    public static async Task ApplyMigrationsAsync(
+        IServiceProvider services,
+        CancellationToken cancellationToken = default)
+    {
+        await using var scope = services.CreateAsyncScope();
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<WorkLaneXDbContext>>();
+        var context = scope.ServiceProvider.GetRequiredService<WorkLaneXDbContext>();
+
+        await context.Database.MigrateAsync(cancellationToken);
+        logger.LogInformation("Database migrations applied.");
+    }
+
     public static async Task SeedDevelopmentDataAsync(
         IServiceProvider services,
         CancellationToken cancellationToken = default)
@@ -29,8 +41,6 @@ public static class ApplicationDatabaseSeeder
         var logger = scope.ServiceProvider.GetRequiredService<ILogger<WorkLaneXDbContext>>();
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var context = scope.ServiceProvider.GetRequiredService<WorkLaneXDbContext>();
-
-        await context.Database.MigrateAsync(cancellationToken);
 
         if (await userManager.FindByEmailAsync(DemoEmail) is not null)
         {

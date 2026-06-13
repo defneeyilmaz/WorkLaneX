@@ -59,6 +59,7 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapWorkLaneXHubs();
 
+await ApplicationDatabaseSeeder.ApplyMigrationsAsync(app.Services);
 await ApplicationDatabaseSeeder.SeedDevelopmentDataAsync(app.Services);
 
 app.Run();

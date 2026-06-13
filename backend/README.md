@@ -80,7 +80,9 @@ docker run --rm -p 8080:8080 \
 
 Health check: `GET http://localhost:8080/api/health`
 
-Copy `src/WorkLaneX.Api/appsettings.Production.example.json` as a reference for production settings. Demo seed data runs only in Development.
+Copy `src/WorkLaneX.Api/appsettings.Production.example.json` as a reference for production settings. The API applies EF migrations on startup in every environment; demo seed data runs only in Development.
+
+For full Vercel + Railway/Render + Neon steps, see [`../DEPLOY.md`](../DEPLOY.md).
 
 ## Solution structure
 
