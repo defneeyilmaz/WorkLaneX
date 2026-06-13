@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useCallback } from "react";
 import { FileText, LayoutDashboard, LayoutGrid, Rocket, X } from "lucide-react";
 
 import type { MainView } from "@/app/app/page";
@@ -83,34 +84,40 @@ export function AppSidebar({
     : null;
   const isMember = workspaceRole === "Member";
 
-  function closeMobileNav() {
+  const closeMobileNav = useCallback(() => {
     onMobileClose?.();
-  }
+  }, [onMobileClose]);
 
-  function handleSelectWorkspace(workspace: WorkspaceSummary) {
-    onSelectWorkspace(workspace);
-    closeMobileNav();
-  }
+  const handleSelectWorkspace = useCallback(
+    (workspace: WorkspaceSummary) => {
+      onSelectWorkspace(workspace);
+      closeMobileNav();
+    },
+    [closeMobileNav, onSelectWorkspace],
+  );
 
-  function handleSelectProject(project: ProjectSummary) {
-    onSelectProject(project);
-    closeMobileNav();
-  }
+  const handleSelectProject = useCallback(
+    (project: ProjectSummary) => {
+      onSelectProject(project);
+      closeMobileNav();
+    },
+    [closeMobileNav, onSelectProject],
+  );
 
-  function handleShowDashboard() {
+  const handleShowDashboard = useCallback(() => {
     onShowDashboard();
     closeMobileNav();
-  }
+  }, [closeMobileNav, onShowDashboard]);
 
-  function handleShowBoard() {
+  const handleShowBoard = useCallback(() => {
     onShowBoard();
     closeMobileNav();
-  }
+  }, [closeMobileNav, onShowBoard]);
 
-  function handleShowDocs() {
+  const handleShowDocs = useCallback(() => {
     onShowDocs();
     closeMobileNav();
-  }
+  }, [closeMobileNav, onShowDocs]);
 
   function handleLogout() {
     logout();

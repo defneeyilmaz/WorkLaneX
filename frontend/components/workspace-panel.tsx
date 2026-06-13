@@ -48,13 +48,15 @@ export function WorkspacePanel({
         ? data.find((workspace) => workspace.id === storedId)
         : undefined;
       const selected = stored ?? data[0];
-      onSelectWorkspace(selected);
+      if (selected.id !== selectedWorkspaceId) {
+        onSelectWorkspace(selected);
+      }
     } catch {
       setLoadError("Could not load workspaces.");
     } finally {
       setIsLoading(false);
     }
-  }, [onSelectWorkspace]);
+  }, [onSelectWorkspace, selectedWorkspaceId]);
 
   useEffect(() => {
     loadWorkspaces();

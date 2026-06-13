@@ -49,14 +49,16 @@ export function SidebarProjectsNav({
             ? localStorage.getItem(SELECTED_PROJECT_KEY)
             : null;
         const selected = data.find((p) => p.id === storedId) ?? data[0];
-        onSelectProject(selected);
+        if (selected.id !== selectedProjectId) {
+          onSelectProject(selected);
+        }
       }
     } catch {
       setLoadError("Could not load projects.");
     } finally {
       setIsLoading(false);
     }
-  }, [onSelectProject, workspaceId]);
+  }, [onSelectProject, selectedProjectId, workspaceId]);
 
   useEffect(() => {
     loadProjects();
