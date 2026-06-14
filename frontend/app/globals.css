@@ -345,6 +345,70 @@
     @apply inline-flex h-10 items-center rounded-md border border-[#e7e5e4] bg-white px-3.5 text-base font-medium text-[#57534e] hover:bg-[#f5f5f4];
   }
 
+  .board-quick-filters {
+    @apply relative shrink-0;
+  }
+
+  .board-quick-filters-active {
+    @apply border-[#fdba74] bg-[#fff7ed] text-[#9a3412];
+  }
+
+  .board-quick-filters-badge {
+    @apply inline-flex min-w-5 items-center justify-center rounded-full bg-[#ea580c] px-1.5 text-xs font-semibold text-white;
+  }
+
+  .board-quick-filters-panel {
+    @apply absolute right-0 top-[calc(100%+0.5rem)] z-50 w-[min(320px,calc(100vw-2rem))] rounded-xl border border-[#e7e5e4] bg-white p-4 shadow-[0_16px_40px_rgba(28,25,23,0.14)];
+  }
+
+  .board-quick-filters-header {
+    @apply mb-4 flex items-center justify-between gap-3;
+  }
+
+  .board-quick-filters-title {
+    @apply text-sm font-semibold text-[#1c1917];
+  }
+
+  .board-quick-filters-clear {
+    @apply text-sm font-medium text-[#ea580c] hover:underline;
+  }
+
+  .board-quick-filters-section {
+    @apply space-y-2 border-t border-[#f5f5f4] py-3 first:border-t-0 first:pt-0;
+  }
+
+  .board-quick-filters-label {
+    @apply text-xs font-semibold uppercase tracking-wide text-[#78716c];
+  }
+
+  .board-quick-filters-chips {
+    @apply flex flex-wrap gap-2;
+  }
+
+  .board-quick-filters-chip {
+    @apply rounded-full border border-[#e7e5e4] bg-[#fafaf9] px-3 py-1.5 text-sm text-[#57534e] transition-colors hover:border-[#fdba74] hover:bg-[#fff7ed];
+  }
+
+  .board-quick-filters-chip-active {
+    @apply border-[#ea580c] bg-[#ffedd5] font-medium text-[#9a3412];
+  }
+
+  .board-quick-filters-select {
+    @apply mt-2 h-10 w-full rounded-md border border-[#e7e5e4] bg-white px-3 text-sm text-[#1c1917];
+  }
+
+  .board-quick-filters-presets {
+    @apply flex flex-wrap gap-2 border-t border-[#f5f5f4] pt-3;
+  }
+
+  .board-quick-filters-preset {
+    @apply rounded-md border border-dashed border-[#d6d3d1] px-3 py-1.5 text-sm text-[#57534e] hover:border-[#ea580c] hover:text-[#9a3412];
+  }
+
+  .board-quick-filters-close {
+    @apply absolute right-3 top-3 rounded-md p-1 text-[#78716c] hover:bg-[#f5f5f4] hover:text-[#1c1917];
+  }
+
   .jira-board-body {
     @apply px-4 py-4 sm:px-6 sm:py-6;
   }

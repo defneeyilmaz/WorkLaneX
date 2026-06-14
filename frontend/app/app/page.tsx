@@ -4,12 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import { FolderKanban, LayoutGrid, Menu, MoreHorizontal, Search } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { BoardQuickFilters } from "@/components/board-quick-filters";
 import { EmptyState } from "@/components/empty-state";
 import { DashboardView } from "@/components/dashboard-view";
 import { DocsView } from "@/components/docs-view";
 import { TaskBoard } from "@/components/task-board";
 import { useAuth } from "@/components/auth-provider";
 import { normalizeWorkspaceRole } from "@/lib/permissions";
+import { DEFAULT_BOARD_FILTERS, type BoardFilters } from "@/lib/board-filters";
 import { fetchWorkspaceProjects, type ProjectSummary } from "@/lib/projects";
 import type { WorkspaceSummary } from "@/lib/workspaces";
 
@@ -24,7 +26,13 @@ export default function AppPage() {
   );
   const [mainView, setMainView] = useState<MainView>("dashboard");
   const [searchQuery, setSearchQuery] = useState("");
+  const [boardFilters, setBoardFilters] = useState<BoardFilters>(DEFAULT_BOARD_FILTERS);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    setSearchQuery("");
+    setBoardFilters(DEFAULT_BOARD_FILTERS);
+  }, [selectedProject?.id]);
 
   useEffect(() => {
     if (!sidebarOpen) {
@@ -143,7 +151,7 @@ export default function AppPage() {
             </div>
           </div>
 
-          {showBoard ? (
+          {showBoard && user ? (
             <div className="jira-board-toolbar">
               <div className="relative min-w-[220px] flex-1">
                 <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-[#7a869a]" />
@@ -155,9 +163,12 @@ export default function AppPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </div>
-              <button type="button" className="jira-filter-btn">
-                Quick filters
-              </button>
+              <BoardQuickFilters
+                workspaceId={selectedWorkspace!.id}
+                userId={user.id}
+                filters={boardFilters}
+                onChange={setBoardFilters}
+              />
             </div>
           ) : null}
         </header>
@@ -184,6 +195,7 @@ export default function AppPage() {
               workspaceRole={workspaceRole}
               userId={user.id}
               searchQuery={searchQuery}
+              boardFilters={boardFilters}
             />
           ) : showDocs && user && workspaceRole ? (
             <DocsView

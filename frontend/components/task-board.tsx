@@ -27,6 +27,12 @@ import { LoadingState } from "@/components/loading-state";
 import { TaskDetailDrawer } from "@/components/task-detail-drawer";
 import { Button } from "@/components/ui/button";
 import {
+  applyBoardFilters,
+  countActiveBoardFilters,
+  DEFAULT_BOARD_FILTERS,
+  type BoardFilters,
+} from "@/lib/board-filters";
+import {
   canApproveTasks,
   canCreateTask,
   canInteractWithTask,
@@ -60,6 +66,7 @@ type TaskBoardProps = {
   workspaceRole: WorkspaceRole;
   userId: string;
   searchQuery?: string;
+  boardFilters?: BoardFilters;
 };
 
 const STATUSES: TaskStatus[] = ["ToDo", "InProgress", "Review", "Done"];
@@ -358,6 +365,7 @@ export function TaskBoard({
   workspaceRole,
   userId,
   searchQuery = "",
+  boardFilters = DEFAULT_BOARD_FILTERS,
 }: TaskBoardProps) {
   const role = normalizeWorkspaceRole(workspaceRole);
   const [tasks, setTasks] = useState<TaskSummary[]>([]);
@@ -372,17 +380,11 @@ export function TaskBoard({
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const normalizedSearch = searchQuery.trim().toLowerCase();
-  const visibleTasks = useMemo(() => {
-    if (!normalizedSearch) {
-      return tasks;
-    }
-    return tasks.filter(
-      (task) =>
-        task.title.toLowerCase().includes(normalizedSearch) ||
-        task.description?.toLowerCase().includes(normalizedSearch) ||
-        task.assigneeName?.toLowerCase().includes(normalizedSearch),
-    );
-  }, [normalizedSearch, tasks]);
+  const activeFilterCount = countActiveBoardFilters(boardFilters);
+  const visibleTasks = useMemo(
+    () => applyBoardFilters(tasks, boardFilters, userId, searchQuery),
+    [boardFilters, searchQuery, tasks, userId],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -636,6 +638,15 @@ export function TaskBoard({
       {error ? (
         <p className="mb-4 rounded-md bg-[#ffebe6] px-3 py-2 text-sm text-[#bf2600]" role="alert">
           {error}
+        </p>
+      ) : null}
+
+      {!isLoading &&
+      tasks.length > 0 &&
+      (activeFilterCount > 0 || normalizedSearch) &&
+      visibleTasks.length !== tasks.length ? (
+        <p className="mb-4 text-sm text-[#78716c]">
+          Showing {visibleTasks.length} of {tasks.length} tasks
         </p>
       ) : null}
 
