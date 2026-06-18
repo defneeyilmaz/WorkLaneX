@@ -9,6 +9,8 @@ import { cn } from "@/lib/utils";
 import { fetchMyWorkspaces, formatWorkspaceRole, type WorkspaceSummary } from "@/lib/workspaces";
 import { fetchWorkspaceProjects, type ProjectSummary } from "@/lib/projects";
 
+const SELECTED_PROJECT_KEY = "worklanex_selected_project_id";
+
 type MemberProjectSidebarProps = {
   selectedWorkspaceId: string | null;
   selectedProjectId: string | null;
@@ -49,10 +51,20 @@ export function MemberProjectSidebar({
     try {
       const data = await fetchWorkspaceProjects(workspaceId);
       setProjects(data);
+      if (data.length > 0) {
+        const storedId =
+          typeof window !== "undefined"
+            ? localStorage.getItem(SELECTED_PROJECT_KEY)
+            : null;
+        const selected = data.find((project) => project.id === storedId) ?? data[0];
+        if (selected.id !== selectedProjectId) {
+          onSelectProject(selected);
+        }
+      }
     } catch {
       setError("Could not load projects.");
     }
-  }, []);
+  }, [onSelectProject, selectedProjectId]);
 
   useEffect(() => {
     if (selectedWorkspaceId) {
@@ -137,7 +149,10 @@ export function MemberProjectSidebar({
               <li key={project.id}>
                 <button
                   type="button"
-                  onClick={() => onSelectProject(project)}
+                  onClick={() => {
+                    localStorage.setItem(SELECTED_PROJECT_KEY, project.id);
+                    onSelectProject(project);
+                  }}
                   className={cn(
                     "sidebar-flyout-item-row",
                     project.id === selectedProjectId && "sidebar-flyout-item-row-active",

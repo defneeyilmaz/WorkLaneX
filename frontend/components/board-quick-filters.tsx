@@ -26,6 +26,7 @@ type BoardQuickFiltersProps = {
   userId: string;
   filters: BoardFilters;
   onChange: (filters: BoardFilters) => void;
+  onClearAll?: () => void;
 };
 
 export function BoardQuickFilters({
@@ -33,6 +34,7 @@ export function BoardQuickFilters({
   userId,
   filters,
   onChange,
+  onClearAll,
 }: BoardQuickFiltersProps) {
   const [open, setOpen] = useState(false);
   const [members, setMembers] = useState<WorkspaceMemberSummary[]>([]);
@@ -133,7 +135,10 @@ export function BoardQuickFilters({
               <button
                 type="button"
                 className="board-quick-filters-clear"
-                onClick={() => onChange(DEFAULT_BOARD_FILTERS)}
+                onClick={() => {
+                  onChange(DEFAULT_BOARD_FILTERS);
+                  onClearAll?.();
+                }}
               >
                 Clear all
               </button>

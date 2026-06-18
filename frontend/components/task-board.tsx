@@ -28,7 +28,6 @@ import { TaskDetailDrawer } from "@/components/task-detail-drawer";
 import { Button } from "@/components/ui/button";
 import {
   applyBoardFilters,
-  countActiveBoardFilters,
   DEFAULT_BOARD_FILTERS,
   type BoardFilters,
 } from "@/lib/board-filters";
@@ -67,6 +66,7 @@ type TaskBoardProps = {
   userId: string;
   searchQuery?: string;
   boardFilters?: BoardFilters;
+  hasActiveQuery?: boolean;
 };
 
 const STATUSES: TaskStatus[] = ["ToDo", "InProgress", "Review", "Done"];
@@ -366,6 +366,7 @@ export function TaskBoard({
   userId,
   searchQuery = "",
   boardFilters = DEFAULT_BOARD_FILTERS,
+  hasActiveQuery = false,
 }: TaskBoardProps) {
   const role = normalizeWorkspaceRole(workspaceRole);
   const [tasks, setTasks] = useState<TaskSummary[]>([]);
@@ -379,8 +380,6 @@ export function TaskBoard({
   const [selectedTask, setSelectedTask] = useState<TaskSummary | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  const normalizedSearch = searchQuery.trim().toLowerCase();
-  const activeFilterCount = countActiveBoardFilters(boardFilters);
   const visibleTasks = useMemo(
     () => applyBoardFilters(tasks, boardFilters, userId, searchQuery),
     [boardFilters, searchQuery, tasks, userId],
@@ -643,10 +642,16 @@ export function TaskBoard({
 
       {!isLoading &&
       tasks.length > 0 &&
-      (activeFilterCount > 0 || normalizedSearch) &&
+      hasActiveQuery &&
       visibleTasks.length !== tasks.length ? (
         <p className="mb-4 text-sm text-[#78716c]">
           Showing {visibleTasks.length} of {tasks.length} tasks
+        </p>
+      ) : null}
+
+      {!isLoading && tasks.length > 0 && hasActiveQuery && visibleTasks.length === 0 ? (
+        <p className="mb-4 rounded-lg border border-dashed border-[#e7e5e4] bg-white px-4 py-3 text-sm text-[#78716c]">
+          No tasks match your search or filters. Try adjusting Quick filters or clearing them.
         </p>
       ) : null}
 

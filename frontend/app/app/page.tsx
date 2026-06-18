@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { FolderKanban, LayoutGrid, Menu, MoreHorizontal, Search } from "lucide-react";
+import { FolderKanban, LayoutGrid, Menu, Search } from "lucide-react";
 
 import { AppSidebar } from "@/components/app-sidebar";
 import { BoardQuickFilters } from "@/components/board-quick-filters";
@@ -10,8 +10,8 @@ import { DashboardView } from "@/components/dashboard-view";
 import { DocsView } from "@/components/docs-view";
 import { TaskBoard } from "@/components/task-board";
 import { useAuth } from "@/components/auth-provider";
+import { DEFAULT_BOARD_FILTERS, countActiveBoardFilters, type BoardFilters } from "@/lib/board-filters";
 import { normalizeWorkspaceRole } from "@/lib/permissions";
-import { DEFAULT_BOARD_FILTERS, type BoardFilters } from "@/lib/board-filters";
 import { fetchWorkspaceProjects, type ProjectSummary } from "@/lib/projects";
 import type { WorkspaceSummary } from "@/lib/workspaces";
 
@@ -94,6 +94,9 @@ export default function AppPage() {
   const showDashboard = mainView === "dashboard" && selectedWorkspace;
   const showDocs = mainView === "docs" && selectedProject && selectedWorkspace;
 
+  const hasActiveBoardQuery =
+    searchQuery.trim().length > 0 || countActiveBoardFilters(boardFilters) > 0;
+
   const headerTitle =
     mainView === "dashboard"
       ? "Dashboard"
@@ -145,9 +148,6 @@ export default function AppPage() {
                   {selectedProject.name}
                 </span>
               ) : null}
-              <button type="button" className="jira-filter-btn" aria-label="More options">
-                <MoreHorizontal className="size-4" />
-              </button>
             </div>
           </div>
 
@@ -168,6 +168,7 @@ export default function AppPage() {
                 userId={user.id}
                 filters={boardFilters}
                 onChange={setBoardFilters}
+                onClearAll={() => setSearchQuery("")}
               />
             </div>
           ) : null}
@@ -196,6 +197,7 @@ export default function AppPage() {
               userId={user.id}
               searchQuery={searchQuery}
               boardFilters={boardFilters}
+              hasActiveQuery={hasActiveBoardQuery}
             />
           ) : showDocs && user && workspaceRole ? (
             <DocsView
