@@ -56,6 +56,7 @@ import {
   type WorkspaceMemberSummary,
   type WorkspaceRole,
 } from "@/lib/workspaces";
+import { getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
 
 type TaskBoardProps = {
@@ -97,15 +98,6 @@ const dropAnimation: DropAnimation = {
   duration: 280,
   easing: "cubic-bezier(0.34, 1.45, 0.64, 1)",
 };
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 function avatarColor(name: string) {
   const code = name.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);

@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { normalizeWorkspaceRole } from "@/lib/permissions";
 import type { ProjectSummary } from "@/lib/projects";
 import type { WorkspaceSummary } from "@/lib/workspaces";
+import { getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
 
 type AppSidebarProps = {
@@ -30,15 +31,6 @@ type AppSidebarProps = {
   onShowBoard: () => void;
   onShowDocs: () => void;
 };
-
-function getInitials(name: string) {
-  return name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-}
 
 function NavButton({
   active,
