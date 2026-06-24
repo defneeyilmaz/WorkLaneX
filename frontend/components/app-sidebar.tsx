@@ -15,7 +15,7 @@ import { WorkspacePanel } from "@/components/workspace-panel";
 import { Button } from "@/components/ui/button";
 import { normalizeWorkspaceRole } from "@/lib/permissions";
 import type { ProjectSummary } from "@/lib/projects";
-import type { WorkspaceSummary } from "@/lib/workspaces";
+import { formatWorkspaceRole, type WorkspaceSummary } from "@/lib/workspaces";
 import { getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
 
@@ -116,6 +116,11 @@ export function AppSidebar({
     router.push("/");
   }
 
+  const workspaceSubtitle = selectedWorkspace
+    ? selectedWorkspace.description?.trim() ||
+      `${formatWorkspaceRole(selectedWorkspace.role)} workspace`
+    : null;
+
   return (
     <aside className={cn("jira-sidebar", mobileOpen && "jira-sidebar-open")}>
       <div className="jira-sidebar-top">
@@ -141,9 +146,7 @@ export function AppSidebar({
           </div>
           <div className="min-w-0">
             <p className="truncate text-lg font-semibold">{selectedWorkspace.name}</p>
-            <p className="truncate text-base text-white/70">
-              {workspaceRole ?? "Workspace"} · Software project
-            </p>
+            <p className="truncate text-base text-white/70">{workspaceSubtitle}</p>
           </div>
         </div>
       ) : null}

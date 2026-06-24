@@ -120,6 +120,7 @@ function taskCardClass(task: TaskSummary, interactive: boolean) {
   return cn(
     "task-card",
     PRIORITY_STRIPE[task.priority],
+    interactive && "task-card-interactive",
     !interactive && "task-card-readonly",
     task.approvalStatus === "Approved" && "task-card-approved",
     task.approvalStatus === "Rejected" && "task-card-rejected",

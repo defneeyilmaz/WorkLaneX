@@ -225,7 +225,7 @@
   }
 
   .jira-sidebar-section-toggle {
-    @apply flex min-w-0 flex-1 items-center gap-2.5 text-left;
+    @apply flex min-w-0 flex-1 items-center gap-2.5 rounded-md px-1 py-0.5 text-left transition-colors hover:bg-white/10;
   }
 
   .sidebar-flyout-trigger {
@@ -622,7 +622,18 @@
   }
 
   .task-card {
-    @apply rounded-md border border-[var(--wlx-border)] border-l-[3px] bg-white p-3.5 shadow-[0_1px_1px_rgba(28,25,23,0.06)] transition-shadow hover:shadow-[0_4px_8px_rgba(28,25,23,0.1)];
+    @apply rounded-lg border border-[var(--wlx-border)] border-l-[3px] bg-[var(--wlx-surface-elevated)] p-3.5;
+    box-shadow: 0 1px 2px var(--wlx-shadow);
+    transition:
+      box-shadow 200ms ease,
+      transform 200ms ease,
+      border-color 200ms ease;
+  }
+
+  .task-card-interactive:hover:not(.task-card-dragging) {
+    border-color: color-mix(in srgb, var(--wlx-brand) 22%, var(--wlx-border));
+    box-shadow: 0 6px 18px var(--wlx-shadow-hover);
+    transform: translateY(-1px);
   }
 
   .task-card-priority-low {
@@ -859,7 +870,10 @@
   }
 
   .landing-shell {
-    @apply flex min-h-full flex-col bg-[linear-gradient(180deg,#fff7ed_0%,var(--wlx-surface-subtle)_38%,#ffffff_100%)];
+    @apply flex min-h-full flex-col;
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, color-mix(in srgb, var(--wlx-brand-soft) 70%, transparent), transparent),
+      linear-gradient(180deg, var(--wlx-brand-soft) 0%, var(--wlx-surface-subtle) 42%, var(--wlx-surface-elevated) 100%);
   }
 
   .landing-header {
@@ -875,7 +889,7 @@
   }
 
   .landing-hero {
-    @apply max-w-3xl;
+    @apply relative max-w-3xl;
   }
 
   .landing-eyebrow {
@@ -883,11 +897,11 @@
   }
 
   .landing-title {
-    @apply mt-3 text-3xl font-semibold tracking-tight text-[var(--wlx-text)] md:text-5xl;
+    @apply mt-3 text-3xl font-semibold leading-[1.12] tracking-tight text-[var(--wlx-text)] md:text-5xl md:leading-[1.08];
   }
 
   .landing-lead {
-    @apply mt-4 max-w-2xl text-base leading-7 text-[var(--wlx-text-secondary)] md:text-lg;
+    @apply mt-5 max-w-2xl text-base leading-7 text-[var(--wlx-text-secondary)] md:text-lg md:leading-8;
   }
 
   .landing-features-heading {
@@ -899,7 +913,7 @@
   }
 
   .landing-feature-card {
-    @apply rounded-xl border border-[var(--wlx-border)] bg-white/90 p-5 shadow-[0_8px_24px_rgba(28,25,23,0.04)];
+    @apply rounded-xl border border-[var(--wlx-border)] bg-white/90 p-5 shadow-[0_8px_24px_var(--wlx-shadow)] transition-[transform,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:border-[color-mix(in_srgb,var(--wlx-brand)_20%,var(--wlx-border))] hover:shadow-[0_14px_32px_var(--wlx-shadow-hover)];
   }
 
   .landing-feature-icon {
@@ -981,6 +995,15 @@
 
     .jira-board-toolbar {
       @apply flex-col items-stretch;
+    }
+
+    .sidebar-flyout-panel {
+      min-width: min(280px, calc(100vw - 24px));
+      max-width: min(300px, calc(100vw - 24px));
+    }
+
+    .sidebar-flyout-panel::before {
+      display: none;
     }
   }
 }

@@ -28,10 +28,12 @@ export function SidebarFlyoutSection({
   children,
 }: SidebarFlyoutSectionProps) {
   const triggerRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const closeTimerRef = useRef<number | null>(null);
   const closeSelfRef = useRef<(() => void) | null>(null);
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [preferHover, setPreferHover] = useState(false);
   const [position, setPosition] = useState({ top: 0, left: 0 });
 
   const closeImmediately = useCallback(() => {
@@ -51,7 +53,14 @@ export function SidebarFlyoutSection({
 
   useEffect(() => {
     setMounted(true);
+    const media = window.matchMedia("(hover: hover) and (pointer: fine)");
+    function syncHoverPreference() {
+      setPreferHover(media.matches);
+    }
+    syncHoverPreference();
+    media.addEventListener("change", syncHoverPreference);
     return () => {
+      media.removeEventListener("change", syncHoverPreference);
       if (closeTimerRef.current) {
         window.clearTimeout(closeTimerRef.current);
       }
@@ -64,6 +73,14 @@ export function SidebarFlyoutSection({
   const updatePosition = useCallback(() => {
     const rect = triggerRef.current?.getBoundingClientRect();
     if (!rect) {
+      return;
+    }
+    const isMobile = window.matchMedia("(max-width: 1023px)").matches;
+    if (isMobile) {
+      setPosition({
+        top: rect.bottom + 6,
+        left: Math.max(12, rect.left),
+      });
       return;
     }
     setPosition({
@@ -86,7 +103,7 @@ export function SidebarFlyoutSection({
     }, CLOSE_DELAY_MS);
   }
 
-  function handleOpen() {
+  const handleOpen = useCallback(() => {
     if (activeCloseFlyout && activeCloseFlyout !== closeSelfRef.current) {
       activeCloseFlyout();
     }
@@ -94,6 +111,14 @@ export function SidebarFlyoutSection({
     activeCloseFlyout = closeImmediately;
     updatePosition();
     setOpen(true);
+  }, [closeImmediately, updatePosition]);
+
+  function handleToggle() {
+    if (open) {
+      closeImmediately();
+      return;
+    }
+    handleOpen();
   }
 
   useEffect(() => {
@@ -112,13 +137,38 @@ export function SidebarFlyoutSection({
     };
   }, [open, updatePosition]);
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target as Node;
+      if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) {
+        return;
+      }
+      closeImmediately();
+    }
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        closeImmediately();
+      }
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [closeImmediately, open]);
+
   const flyout =
     open && mounted ? (
       <div
+        ref={panelRef}
         className="sidebar-flyout-panel"
         style={{ top: position.top, left: position.left }}
-        onMouseEnter={cancelClose}
-        onMouseLeave={scheduleClose}
+        onMouseEnter={preferHover ? cancelClose : undefined}
+        onMouseLeave={preferHover ? scheduleClose : undefined}
       >
         <p className="sidebar-flyout-title">{title}</p>
         {children}
@@ -130,8 +180,8 @@ export function SidebarFlyoutSection({
       <div
         ref={triggerRef}
         className="sidebar-flyout-trigger"
-        onMouseEnter={handleOpen}
-        onMouseLeave={scheduleClose}
+        onMouseEnter={preferHover ? handleOpen : undefined}
+        onMouseLeave={preferHover ? scheduleClose : undefined}
       >
         <div
           className={cn(
@@ -139,7 +189,13 @@ export function SidebarFlyoutSection({
             open && "jira-sidebar-label-row-active",
           )}
         >
-          <div className="jira-sidebar-section-toggle">
+          <button
+            type="button"
+            className="jira-sidebar-section-toggle"
+            onClick={handleToggle}
+            aria-expanded={open}
+            aria-haspopup="dialog"
+          >
             <ChevronRight
               className={cn(
                 "size-4 shrink-0 text-white/80 transition-transform duration-200",
@@ -147,8 +203,12 @@ export function SidebarFlyoutSection({
               )}
             />
             <span className="jira-sidebar-label jira-sidebar-label-bright">{title}</span>
-          </div>
-          {action ? <div className="shrink-0">{action}</div> : null}
+          </button>
+          {action ? (
+            <div className="shrink-0" onPointerDown={(event) => event.stopPropagation()}>
+              {action}
+            </div>
+          ) : null}
         </div>
       </div>
 
