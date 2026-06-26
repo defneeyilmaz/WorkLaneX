@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import { FileText, LayoutDashboard, LayoutGrid, Rocket, X } from "lucide-react";
 
-import type { MainView } from "@/app/app/page";
+import type { MainView } from "@/lib/app-navigation";
 import { useAuth } from "@/components/auth-provider";
 import { MemberProjectSidebar } from "@/components/member-project-sidebar";
 import { SidebarProjectsNav } from "@/components/sidebar-projects-nav";
@@ -25,8 +25,14 @@ type AppSidebarProps = {
   mainView: MainView;
   mobileOpen?: boolean;
   onMobileClose?: () => void;
-  onSelectWorkspace: (workspace: WorkspaceSummary) => void;
-  onSelectProject: (project: ProjectSummary) => void;
+  onSelectWorkspace: (
+    workspace: WorkspaceSummary,
+    options?: { navigate?: boolean },
+  ) => void;
+  onSelectProject: (
+    project: ProjectSummary,
+    options?: { navigate?: boolean },
+  ) => void;
   onShowDashboard: () => void;
   onShowBoard: () => void;
   onShowDocs: () => void;

@@ -3,20 +3,25 @@
 import { useCallback, useEffect, useState } from "react";
 import { FileText, FolderKanban, LayoutDashboard, LayoutGrid } from "lucide-react";
 
-import type { MainView } from "@/app/app/page";
+import type { MainView } from "@/lib/app-navigation";
+import { SELECTED_PROJECT_KEY } from "@/lib/app-navigation";
 import { SidebarFlyoutSection } from "@/components/sidebar-flyout-section";
 import { cn } from "@/lib/utils";
 import { fetchMyWorkspaces, formatWorkspaceRole, type WorkspaceSummary } from "@/lib/workspaces";
 import { fetchWorkspaceProjects, type ProjectSummary } from "@/lib/projects";
 
-const SELECTED_PROJECT_KEY = "worklanex_selected_project_id";
-
 type MemberProjectSidebarProps = {
   selectedWorkspaceId: string | null;
   selectedProjectId: string | null;
   mainView: MainView;
-  onSelectWorkspace: (workspace: WorkspaceSummary) => void;
-  onSelectProject: (project: ProjectSummary) => void;
+  onSelectWorkspace: (
+    workspace: WorkspaceSummary,
+    options?: { navigate?: boolean },
+  ) => void;
+  onSelectProject: (
+    project: ProjectSummary,
+    options?: { navigate?: boolean },
+  ) => void;
   onShowDashboard: () => void;
   onShowBoard: () => void;
   onShowDocs: () => void;
@@ -41,7 +46,7 @@ export function MemberProjectSidebar({
       .then((data) => {
         setWorkspaces(data);
         if (data.length > 0 && !selectedWorkspaceId) {
-          onSelectWorkspace(data[0]);
+          onSelectWorkspace(data[0], { navigate: false });
         }
       })
       .catch(() => setError("Could not load workspaces."));
@@ -51,16 +56,24 @@ export function MemberProjectSidebar({
     try {
       const data = await fetchWorkspaceProjects(workspaceId);
       setProjects(data);
-      if (data.length > 0) {
-        const storedId =
-          typeof window !== "undefined"
-            ? localStorage.getItem(SELECTED_PROJECT_KEY)
-            : null;
-        const selected = data.find((project) => project.id === storedId) ?? data[0];
-        if (selected.id !== selectedProjectId) {
-          onSelectProject(selected);
+      if (data.length === 0) {
+        return;
+      }
+
+      if (selectedProjectId) {
+        const matched = data.find((project) => project.id === selectedProjectId);
+        if (matched) {
+          onSelectProject(matched, { navigate: false });
+          return;
         }
       }
+
+      const storedId =
+        typeof window !== "undefined"
+          ? localStorage.getItem(SELECTED_PROJECT_KEY)
+          : null;
+      const selected = data.find((project) => project.id === storedId) ?? data[0];
+      onSelectProject(selected, { navigate: false });
     } catch {
       setError("Could not load projects.");
     }

@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { CreateWorkspaceDialog } from "@/components/create-workspace-dialog";
 import { LoadingState } from "@/components/loading-state";
 import { SidebarFlyoutSection } from "@/components/sidebar-flyout-section";
+import { SELECTED_WORKSPACE_KEY } from "@/lib/app-navigation";
 import { cn } from "@/lib/utils";
 import {
   fetchMyWorkspaces,
@@ -13,11 +14,12 @@ import {
   type WorkspaceSummary,
 } from "@/lib/workspaces";
 
-const SELECTED_WORKSPACE_KEY = "worklanex_selected_workspace_id";
-
 type WorkspacePanelProps = {
   selectedWorkspaceId: string | null;
-  onSelectWorkspace: (workspace: WorkspaceSummary) => void;
+  onSelectWorkspace: (
+    workspace: WorkspaceSummary,
+    options?: { navigate?: boolean },
+  ) => void;
 };
 
 export function WorkspacePanel({
@@ -49,7 +51,7 @@ export function WorkspacePanel({
         : undefined;
       const selected = stored ?? data[0];
       if (selected.id !== selectedWorkspaceId) {
-        onSelectWorkspace(selected);
+        onSelectWorkspace(selected, { navigate: false });
       }
     } catch {
       setLoadError("Could not load workspaces.");

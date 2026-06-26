@@ -6,6 +6,7 @@ import { FolderKanban, Plus } from "lucide-react";
 import { CreateProjectDialog } from "@/components/create-project-dialog";
 import { LoadingState } from "@/components/loading-state";
 import { SidebarFlyoutSection } from "@/components/sidebar-flyout-section";
+import { SELECTED_PROJECT_KEY } from "@/lib/app-navigation";
 import { cn } from "@/lib/utils";
 import { canCreateProject, normalizeWorkspaceRole } from "@/lib/permissions";
 import {
@@ -14,14 +15,15 @@ import {
 } from "@/lib/projects";
 import type { WorkspaceRole } from "@/lib/workspaces";
 
-const SELECTED_PROJECT_KEY = "worklanex_selected_project_id";
-
 type SidebarProjectsNavProps = {
   workspaceId: string;
   workspaceName: string;
   workspaceRole: WorkspaceRole;
   selectedProjectId: string | null;
-  onSelectProject: (project: ProjectSummary) => void;
+  onSelectProject: (
+    project: ProjectSummary,
+    options?: { navigate?: boolean },
+  ) => void;
 };
 
 export function SidebarProjectsNav({
@@ -43,16 +45,24 @@ export function SidebarProjectsNav({
     try {
       const data = await fetchWorkspaceProjects(workspaceId);
       setProjects(data);
-      if (data.length > 0) {
-        const storedId =
-          typeof window !== "undefined"
-            ? localStorage.getItem(SELECTED_PROJECT_KEY)
-            : null;
-        const selected = data.find((p) => p.id === storedId) ?? data[0];
-        if (selected.id !== selectedProjectId) {
-          onSelectProject(selected);
+      if (data.length === 0) {
+        return;
+      }
+
+      if (selectedProjectId) {
+        const matched = data.find((project) => project.id === selectedProjectId);
+        if (matched) {
+          onSelectProject(matched, { navigate: false });
+          return;
         }
       }
+
+      const storedId =
+        typeof window !== "undefined"
+          ? localStorage.getItem(SELECTED_PROJECT_KEY)
+          : null;
+      const selected = data.find((project) => project.id === storedId) ?? data[0];
+      onSelectProject(selected, { navigate: false });
     } catch {
       setLoadError("Could not load projects.");
     } finally {
