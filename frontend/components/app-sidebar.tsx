@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
-import { FileText, LayoutDashboard, LayoutGrid, Rocket, X } from "lucide-react";
+import { FileText, LayoutDashboard, LayoutGrid, NotebookPen, Rocket, X } from "lucide-react";
 
 import type { MainView } from "@/lib/app-navigation";
 import { useAuth } from "@/components/auth-provider";
@@ -36,6 +36,7 @@ type AppSidebarProps = {
   onShowDashboard: () => void;
   onShowBoard: () => void;
   onShowDocs: () => void;
+  onShowMeetings: () => void;
 };
 
 function NavButton({
@@ -73,6 +74,7 @@ export function AppSidebar({
   onShowDashboard,
   onShowBoard,
   onShowDocs,
+  onShowMeetings,
 }: AppSidebarProps) {
   const { user, logout } = useAuth();
   const router = useRouter();
@@ -116,6 +118,11 @@ export function AppSidebar({
     onShowDocs();
     closeMobileNav();
   }, [closeMobileNav, onShowDocs]);
+
+  const handleShowMeetings = useCallback(() => {
+    onShowMeetings();
+    closeMobileNav();
+  }, [closeMobileNav, onShowMeetings]);
 
   function handleLogout() {
     logout();
@@ -184,6 +191,12 @@ export function AppSidebar({
                 icon={<FileText className="shrink-0" />}
                 label="Docs"
               />
+              <NavButton
+                active={mainView === "meetings"}
+                onClick={handleShowMeetings}
+                icon={<NotebookPen className="shrink-0" />}
+                label="Meetings"
+              />
             </div>
             <SidebarProjectsNav
               workspaceId={selectedWorkspace.id}
@@ -209,6 +222,7 @@ export function AppSidebar({
             onShowDashboard={handleShowDashboard}
             onShowBoard={handleShowBoard}
             onShowDocs={handleShowDocs}
+            onShowMeetings={handleShowMeetings}
           />
         ) : null}
       </div>

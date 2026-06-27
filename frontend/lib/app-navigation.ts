@@ -1,4 +1,4 @@
-export type MainView = "dashboard" | "board" | "docs";
+export type MainView = "dashboard" | "board" | "docs" | "meetings";
 
 export const SELECTED_WORKSPACE_KEY = "worklanex_selected_workspace_id";
 export const SELECTED_PROJECT_KEY = "worklanex_selected_project_id";
@@ -7,6 +7,9 @@ export type ParsedAppPath = {
   view: MainView;
   projectId: string | null;
 };
+
+const PROJECT_VIEW_PATTERN =
+  /^\/app\/projects\/([^/]+)\/(board|docs|meetings)$/;
 
 export function parseAppPath(pathname: string): ParsedAppPath {
   const normalized = pathname.replace(/\/$/, "") || "/app";
@@ -23,14 +26,16 @@ export function parseAppPath(pathname: string): ParsedAppPath {
     return { view: "docs", projectId: null };
   }
 
-  const boardMatch = normalized.match(/^\/app\/projects\/([^/]+)\/board$/);
-  if (boardMatch) {
-    return { view: "board", projectId: boardMatch[1] };
+  if (normalized === "/app/meetings") {
+    return { view: "meetings", projectId: null };
   }
 
-  const docsMatch = normalized.match(/^\/app\/projects\/([^/]+)\/docs$/);
-  if (docsMatch) {
-    return { view: "docs", projectId: docsMatch[1] };
+  const projectMatch = normalized.match(PROJECT_VIEW_PATTERN);
+  if (projectMatch) {
+    return {
+      view: projectMatch[2] as MainView,
+      projectId: projectMatch[1],
+    };
   }
 
   return { view: "dashboard", projectId: null };
@@ -49,5 +54,5 @@ export function appPathFor(view: MainView, projectId?: string | null): string {
 }
 
 export function isProjectAppPath(pathname: string): boolean {
-  return /^\/app\/projects\/[^/]+\/(board|docs)$/.test(pathname.replace(/\/$/, ""));
+  return PROJECT_VIEW_PATTERN.test(pathname.replace(/\/$/, ""));
 }

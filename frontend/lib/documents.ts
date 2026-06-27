@@ -2,10 +2,14 @@ import axios from "axios";
 
 import { api } from "@/lib/api";
 
+export type DocumentType = "Spec" | "MeetingNote";
+
 export type ProjectDocumentSummary = {
   id: string;
   projectId: string;
   title: string;
+  type: DocumentType;
+  meetingHeldAt: string | null;
   authorId: string;
   authorName: string;
   createdAt: string;
@@ -16,11 +20,35 @@ export type ProjectDocumentDetail = ProjectDocumentSummary & {
   content: string;
 };
 
+export function buildMeetingNoteTemplate(date = new Date()) {
+  const meetingDate = date.toISOString().slice(0, 10);
+  return {
+    title: `Sprint planning — ${meetingDate}`,
+    meetingHeldAt: meetingDate,
+    content: `# Sprint planning — ${meetingDate}
+
+**Attendees:** 
+
+**Agenda**
+- 
+
+**Notes**
+- 
+
+**Action items**
+- [ ] `,
+  };
+}
+
 export async function fetchProjectDocuments(
   projectId: string,
+  type?: DocumentType,
 ): Promise<ProjectDocumentSummary[]> {
   const { data } = await api.get<ProjectDocumentSummary[]>(
     `/api/projects/${projectId}/documents`,
+    {
+      params: type ? { type } : undefined,
+    },
   );
   return data;
 }
@@ -36,14 +64,20 @@ export async function fetchProjectDocument(
 
 export async function createProjectDocument(
   projectId: string,
-  title: string,
-  content?: string,
+  payload: {
+    title: string;
+    content?: string;
+    type?: DocumentType;
+    meetingHeldAt?: string | null;
+  },
 ): Promise<ProjectDocumentDetail> {
   const { data } = await api.post<ProjectDocumentDetail>(
     `/api/projects/${projectId}/documents`,
     {
-      title,
-      content: content?.trim() || null,
+      title: payload.title,
+      content: payload.content?.trim() || null,
+      type: payload.type,
+      meetingHeldAt: payload.meetingHeldAt ?? null,
     },
   );
   return data;
@@ -51,7 +85,11 @@ export async function createProjectDocument(
 
 export async function updateProjectDocument(
   documentId: string,
-  payload: { title?: string; content?: string },
+  payload: {
+    title?: string;
+    content?: string;
+    meetingHeldAt?: string | null;
+  },
 ): Promise<ProjectDocumentDetail> {
   const { data } = await api.patch<ProjectDocumentDetail>(
     `/api/projects/documents/${documentId}`,
@@ -75,4 +113,18 @@ export function getDocumentErrorMessage(error: unknown): string {
     }
   }
   return "Could not save document.";
+}
+
+export function formatDocumentDate(value: string | null): string {
+  if (!value) {
+    return "";
+  }
+  return new Date(value).toLocaleString();
+}
+
+export function formatMeetingDate(value: string | null): string {
+  if (!value) {
+    return "";
+  }
+  return new Date(value).toLocaleDateString();
 }

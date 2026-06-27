@@ -263,10 +263,11 @@ public class ProjectsController : ControllerBase
     [HttpGet("{projectId:guid}/documents")]
     public async Task<IActionResult> ListDocuments(
         Guid projectId,
+        [FromQuery] string? type,
         CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(
-            new ListProjectDocumentsQuery(projectId),
+            new ListProjectDocumentsQuery(projectId, type),
             cancellationToken);
 
         if (!result.Succeeded)
@@ -302,8 +303,22 @@ public class ProjectsController : ControllerBase
     {
         try
         {
+            var documentType = DocumentType.Spec;
+            if (!string.IsNullOrWhiteSpace(request.Type))
+            {
+                if (!Enum.TryParse<DocumentType>(request.Type, ignoreCase: true, out documentType))
+                {
+                    return BadRequest(new { error = "Invalid document type." });
+                }
+            }
+
             var result = await _mediator.Send(
-                new CreateProjectDocumentCommand(projectId, request.Title, request.Content),
+                new CreateProjectDocumentCommand(
+                    projectId,
+                    request.Title,
+                    request.Content,
+                    documentType,
+                    request.MeetingHeldAt),
                 cancellationToken);
 
             if (!result.Succeeded)
@@ -334,7 +349,11 @@ public class ProjectsController : ControllerBase
         try
         {
             var result = await _mediator.Send(
-                new UpdateProjectDocumentCommand(documentId, request.Title, request.Content),
+                new UpdateProjectDocumentCommand(
+                    documentId,
+                    request.Title,
+                    request.Content,
+                    request.MeetingHeldAt),
                 cancellationToken);
 
             if (!result.Succeeded)
@@ -398,6 +417,13 @@ public record RejectTaskRequest(string RejectionNote);
 
 public record AddTaskCommentRequest(string Body);
 
-public record CreateProjectDocumentRequest(string Title, string? Content = null);
+public record CreateProjectDocumentRequest(
+    string Title,
+    string? Content = null,
+    string? Type = null,
+    DateTime? MeetingHeldAt = null);
 
-public record UpdateProjectDocumentRequest(string? Title = null, string? Content = null);
+public record UpdateProjectDocumentRequest(
+    string? Title = null,
+    string? Content = null,
+    DateTime? MeetingHeldAt = null);

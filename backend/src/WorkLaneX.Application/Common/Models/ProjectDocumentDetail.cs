@@ -5,6 +5,8 @@ public record ProjectDocumentDetail(
     Guid ProjectId,
     string Title,
     string Content,
+    string Type,
+    DateTime? MeetingHeldAt,
     Guid AuthorId,
     string AuthorName,
     DateTime CreatedAt,

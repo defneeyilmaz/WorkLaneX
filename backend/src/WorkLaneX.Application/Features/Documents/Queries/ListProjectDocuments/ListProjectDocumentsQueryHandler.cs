@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using WorkLaneX.Application.Common.Interfaces;
 using WorkLaneX.Application.Common.Models;
+using WorkLaneX.Domain.Enums;
 
 namespace WorkLaneX.Application.Features.Documents.Queries.ListProjectDocuments;
 
@@ -57,10 +58,24 @@ public class ListProjectDocumentsQueryHandler
                 "Project not found or you do not have access.");
         }
 
-        var documents = await _context.ProjectDocuments
+        var documentsQuery = _context.ProjectDocuments
             .AsNoTracking()
-            .Where(d => d.ProjectId == request.ProjectId)
-            .OrderByDescending(d => d.UpdatedAt ?? d.CreatedAt)
+            .Where(d => d.ProjectId == request.ProjectId);
+
+        if (!string.IsNullOrWhiteSpace(request.Type))
+        {
+            if (!Enum.TryParse<DocumentType>(request.Type, ignoreCase: true, out var documentType))
+            {
+                return OperationResult<IReadOnlyList<ProjectDocumentSummary>>.Failure(
+                    "Invalid document type.");
+            }
+
+            documentsQuery = documentsQuery.Where(d => d.Type == documentType);
+        }
+
+        var documents = await documentsQuery
+            .OrderByDescending(d => d.MeetingHeldAt ?? d.UpdatedAt ?? d.CreatedAt)
+            .ThenByDescending(d => d.UpdatedAt ?? d.CreatedAt)
             .ThenByDescending(d => d.CreatedAt)
             .ToListAsync(cancellationToken);
 
@@ -72,6 +87,8 @@ public class ListProjectDocumentsQueryHandler
                 d.Id,
                 d.ProjectId,
                 d.Title,
+                d.Type.ToString(),
+                d.MeetingHeldAt,
                 d.AuthorId,
                 authorNames.GetValueOrDefault(d.AuthorId, "Unknown"),
                 d.CreatedAt,

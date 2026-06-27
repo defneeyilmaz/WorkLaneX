@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using WorkLaneX.Application.Common.Interfaces;
 using WorkLaneX.Application.Common.Models;
 
+using WorkLaneX.Domain.Enums;
+
 namespace WorkLaneX.Application.Features.Documents.Commands.UpdateProjectDocument;
 
 public class UpdateProjectDocumentCommandHandler
@@ -66,6 +68,11 @@ public class UpdateProjectDocumentCommandHandler
             document.Content = request.Content.Trim();
         }
 
+        if (document.Type == DocumentType.MeetingNote && request.MeetingHeldAt is not null)
+        {
+            document.MeetingHeldAt = request.MeetingHeldAt;
+        }
+
         document.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync(cancellationToken);
@@ -80,6 +87,8 @@ public class UpdateProjectDocumentCommandHandler
                 document.ProjectId,
                 document.Title,
                 document.Content,
+                document.Type.ToString(),
+                document.MeetingHeldAt,
                 document.AuthorId,
                 authorNames.GetValueOrDefault(document.AuthorId, "Unknown"),
                 document.CreatedAt,

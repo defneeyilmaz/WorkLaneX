@@ -1,4 +1,5 @@
 using WorkLaneX.Domain.Common;
+using WorkLaneX.Domain.Enums;
 
 namespace WorkLaneX.Domain.Entities;
 
@@ -11,4 +12,6 @@ public class ProjectDocument : BaseEntity
 
     public string Title { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
+    public DocumentType Type { get; set; } = DocumentType.Spec;
+    public DateTime? MeetingHeldAt { get; set; }
 }

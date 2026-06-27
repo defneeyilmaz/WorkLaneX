@@ -1,4 +1,4 @@
-import { FileText, Kanban, LayoutDashboard, Sparkles } from "lucide-react";
+import { Calendar, FileText, Kanban, LayoutDashboard, Sparkles } from "lucide-react";
 
 const FEATURES = [
   {
@@ -15,6 +15,11 @@ const FEATURES = [
     icon: FileText,
     title: "Project docs",
     description: "Write markdown specs and notes with live preview.",
+  },
+  {
+    icon: Calendar,
+    title: "Meeting notes",
+    description: "Capture standups and planning sessions with structured templates.",
   },
   {
     icon: Sparkles,

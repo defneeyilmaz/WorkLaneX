@@ -154,6 +154,7 @@ public static class ApplicationDatabaseSeeder
             ProjectId = project.Id,
             AuthorId = demoUser.Id,
             Title = "Release checklist",
+            Type = DocumentType.Spec,
             Content =
                 "# MVP launch checklist\n\n" +
                 "- [x] Auth and workspace flows\n" +
@@ -163,11 +164,33 @@ public static class ApplicationDatabaseSeeder
                 "Use this doc to track release readiness with the team.",
         };
 
+        var meetingNote = new ProjectDocument
+        {
+            ProjectId = project.Id,
+            AuthorId = demoUser.Id,
+            Title = "Sprint planning — 2026-06-02",
+            Type = DocumentType.MeetingNote,
+            MeetingHeldAt = new DateTime(2026, 6, 2, 10, 0, 0, DateTimeKind.Utc),
+            Content =
+                "# Sprint planning — 2026-06-02\n\n" +
+                "**Attendees:** Defne, Alex, Sam\n\n" +
+                "**Agenda**\n" +
+                "- Review board priorities\n" +
+                "- Confirm deploy timeline\n\n" +
+                "**Notes**\n" +
+                "- Dashboard polish is the focus this sprint.\n" +
+                "- Meeting notes will live beside project docs.\n\n" +
+                "**Action items**\n" +
+                "- [ ] Finalize sidebar navigation\n" +
+                "- [ ] Add meeting notes to demo seed",
+        };
+
         context.Workspaces.Add(workspace);
         context.WorkspaceMembers.Add(membership);
         context.Projects.Add(project);
         context.TaskItems.AddRange(tasks);
         context.ProjectDocuments.Add(document);
+        context.ProjectDocuments.Add(meetingNote);
 
         var pipelineTask = tasks[1];
         context.TaskComments.Add(new TaskComment

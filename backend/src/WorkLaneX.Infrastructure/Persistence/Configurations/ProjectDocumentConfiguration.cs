@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using WorkLaneX.Domain.Entities;
+using WorkLaneX.Domain.Enums;
 
 namespace WorkLaneX.Infrastructure.Persistence.Configurations;
 
@@ -20,7 +21,12 @@ public class ProjectDocumentConfiguration : IEntityTypeConfiguration<ProjectDocu
             .IsRequired()
             .HasColumnType("text");
 
-        builder.HasIndex(d => new { d.ProjectId, d.UpdatedAt, d.CreatedAt });
+        builder.Property(d => d.Type)
+            .HasConversion<string>()
+            .HasMaxLength(32)
+            .HasDefaultValue(DocumentType.Spec);
+
+        builder.HasIndex(d => new { d.ProjectId, d.Type, d.UpdatedAt, d.CreatedAt });
 
         builder.HasOne(d => d.Project)
             .WithMany(p => p.Documents)

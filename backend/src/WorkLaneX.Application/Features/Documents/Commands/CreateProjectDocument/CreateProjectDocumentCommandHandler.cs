@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using WorkLaneX.Application.Common.Interfaces;
 using WorkLaneX.Application.Common.Models;
 using WorkLaneX.Domain.Entities;
+using WorkLaneX.Domain.Enums;
 
 namespace WorkLaneX.Application.Features.Documents.Commands.CreateProjectDocument;
 
@@ -65,6 +66,10 @@ public class CreateProjectDocumentCommandHandler
             Content = string.IsNullOrWhiteSpace(request.Content)
                 ? string.Empty
                 : request.Content.Trim(),
+            Type = request.Type,
+            MeetingHeldAt = request.Type == DocumentType.MeetingNote
+                ? request.MeetingHeldAt
+                : null,
         };
 
         _context.ProjectDocuments.Add(document);
@@ -78,6 +83,8 @@ public class CreateProjectDocumentCommandHandler
                 document.ProjectId,
                 document.Title,
                 document.Content,
+                document.Type.ToString(),
+                document.MeetingHeldAt,
                 document.AuthorId,
                 authorNames.GetValueOrDefault(document.AuthorId, "Unknown"),
                 document.CreatedAt,

@@ -10,6 +10,7 @@ import { EmptyState } from "@/components/empty-state";
 import { DashboardView } from "@/components/dashboard-view";
 import { DocsView } from "@/components/docs-view";
 import { LoadingState } from "@/components/loading-state";
+import { MeetingsView } from "@/components/meetings-view";
 import { TaskBoard } from "@/components/task-board";
 import { useAuth } from "@/components/auth-provider";
 import {
@@ -30,6 +31,7 @@ function isRecognizedAppPath(pathname: string): boolean {
     normalized === "/app" ||
     normalized === "/app/board" ||
     normalized === "/app/docs" ||
+    normalized === "/app/meetings" ||
     isProjectAppPath(normalized)
   );
 }
@@ -142,7 +144,8 @@ export function AppShell() {
       setSelectedProject(project);
       localStorage.setItem(SELECTED_PROJECT_KEY, project.id);
       if (options?.navigate !== false) {
-        const targetView = mainView === "docs" ? "docs" : "board";
+        const targetView =
+          mainView === "docs" || mainView === "meetings" ? mainView : "board";
         router.push(appPathFor(targetView, project.id));
       }
     },
@@ -178,6 +181,8 @@ export function AppShell() {
   const showDashboard = mainView === "dashboard" && selectedWorkspace;
   const showDocs =
     mainView === "docs" && routeProjectId && selectedProject && selectedWorkspace;
+  const showMeetings =
+    mainView === "meetings" && routeProjectId && selectedProject && selectedWorkspace;
 
   const hasActiveBoardQuery =
     searchQuery.trim().length > 0 || countActiveBoardFilters(boardFilters) > 0;
@@ -187,7 +192,9 @@ export function AppShell() {
       ? "Dashboard"
       : mainView === "docs"
         ? "Docs"
-        : "Board";
+        : mainView === "meetings"
+          ? "Meetings"
+          : "Board";
 
   return (
     <div className="jira-shell app-layout">
@@ -211,6 +218,7 @@ export function AppShell() {
         onShowDashboard={() => navigateToView("dashboard")}
         onShowBoard={() => navigateToView("board")}
         onShowDocs={() => navigateToView("docs")}
+        onShowMeetings={() => navigateToView("meetings")}
       />
 
       <div className="jira-main">
@@ -228,7 +236,7 @@ export function AppShell() {
               <h1 className="jira-board-title">{headerTitle}</h1>
             </div>
             <div className="flex items-center gap-2">
-              {(showBoard || showDocs) && selectedProject ? (
+              {(showBoard || showDocs || showMeetings) && selectedProject ? (
                 <span className="jira-filter-btn cursor-default">
                   {selectedProject.name}
                 </span>
@@ -292,14 +300,26 @@ export function AppShell() {
               workspaceRole={workspaceRole}
               userId={user.id}
             />
+          ) : showMeetings && user && workspaceRole ? (
+            <MeetingsView
+              key={selectedProject.id}
+              projectId={selectedProject.id}
+              projectName={selectedProject.name}
+              workspaceRole={workspaceRole}
+              userId={user.id}
+            />
           ) : routeProjectId && !selectedProject && selectedWorkspace ? (
             <LoadingState label="Loading project…" />
-          ) : mainView === "board" || mainView === "docs" ? (
+          ) : mainView === "board" || mainView === "docs" || mainView === "meetings" ? (
             <EmptyState
               icon={FolderKanban}
               title="Select a project"
               description={`Pick a project from the sidebar to open ${
-                mainView === "docs" ? "its docs" : "its board"
+                mainView === "docs"
+                  ? "its docs"
+                  : mainView === "meetings"
+                    ? "its meeting notes"
+                    : "its board"
               }.`}
             />
           ) : null}

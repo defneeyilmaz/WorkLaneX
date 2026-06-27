@@ -6,5 +6,6 @@ namespace WorkLaneX.Application.Features.Documents.Commands.UpdateProjectDocumen
 public record UpdateProjectDocumentCommand(
     Guid DocumentId,
     string? Title,
-    string? Content)
+    string? Content,
+    DateTime? MeetingHeldAt = null)
     : IRequest<OperationResult<ProjectDocumentDetail>>;

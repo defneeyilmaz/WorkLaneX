@@ -67,6 +67,8 @@ public class GetProjectDocumentQueryHandler
                 document.ProjectId,
                 document.Title,
                 document.Content,
+                document.Type.ToString(),
+                document.MeetingHeldAt,
                 document.AuthorId,
                 authorNames.GetValueOrDefault(document.AuthorId, "Unknown"),
                 document.CreatedAt,
