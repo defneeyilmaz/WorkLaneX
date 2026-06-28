@@ -7,6 +7,8 @@ using WorkLaneX.Application.Features.Documents.Commands.DeleteProjectDocument;
 using WorkLaneX.Application.Features.Documents.Commands.UpdateProjectDocument;
 using WorkLaneX.Application.Features.Documents.Queries.GetProjectDocument;
 using WorkLaneX.Application.Features.Documents.Queries.ListProjectDocuments;
+using WorkLaneX.Application.Features.Messages.Commands.CreateProjectMessage;
+using WorkLaneX.Application.Features.Messages.Queries.ListProjectMessages;
 using WorkLaneX.Application.Features.Tasks.Commands.AddTaskComment;
 using WorkLaneX.Application.Features.Tasks.Commands.ApproveTask;
 using WorkLaneX.Application.Features.Tasks.Commands.CreateTask;
@@ -391,6 +393,54 @@ public class ProjectsController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpGet("{projectId:guid}/messages")]
+    public async Task<IActionResult> ListMessages(
+        Guid projectId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new ListProjectMessagesQuery(projectId),
+            cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            return NotFound(new { error = result.Error });
+        }
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("{projectId:guid}/messages")]
+    public async Task<IActionResult> CreateMessage(
+        Guid projectId,
+        [FromBody] CreateProjectMessageRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _mediator.Send(
+                new CreateProjectMessageCommand(projectId, request.Body),
+                cancellationToken);
+
+            if (!result.Succeeded)
+            {
+                var status = result.Error?.Contains("access", StringComparison.OrdinalIgnoreCase) == true
+                    ? StatusCodes.Status404NotFound
+                    : StatusCodes.Status400BadRequest;
+                return StatusCode(status, new { error = result.Error });
+            }
+
+            return CreatedAtAction(
+                nameof(ListMessages),
+                new { projectId },
+                result.Value);
+        }
+        catch (ValidationException ex)
+        {
+            return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
+        }
+    }
 }
 
 public record CreateTaskRequest(
@@ -427,3 +477,5 @@ public record UpdateProjectDocumentRequest(
     string? Title = null,
     string? Content = null,
     DateTime? MeetingHeldAt = null);
+
+public record CreateProjectMessageRequest(string Body);

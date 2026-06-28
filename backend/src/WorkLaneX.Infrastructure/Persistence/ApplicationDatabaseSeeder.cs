@@ -192,6 +192,23 @@ public static class ApplicationDatabaseSeeder
         context.ProjectDocuments.Add(document);
         context.ProjectDocuments.Add(meetingNote);
 
+        var now = DateTime.UtcNow;
+        context.ProjectMessages.AddRange(
+            new ProjectMessage
+            {
+                ProjectId = project.Id,
+                AuthorId = demoUser.Id,
+                Body = "Welcome to the project discussion — use this feed for quick updates and questions.",
+                CreatedAt = now.AddMinutes(-180),
+            },
+            new ProjectMessage
+            {
+                ProjectId = project.Id,
+                AuthorId = demoUser.Id,
+                Body = "Board filters and meeting notes are in — next up is team discussion with live refresh.",
+                CreatedAt = now.AddMinutes(-45),
+            });
+
         var pipelineTask = tasks[1];
         context.TaskComments.Add(new TaskComment
         {
@@ -200,7 +217,6 @@ public static class ApplicationDatabaseSeeder
             Body = "GitHub Actions workflow is in place — next step is caching NuGet packages.",
         });
 
-        var now = DateTime.UtcNow;
         context.ActivityLogs.AddRange(
             CreateActivity(workspace.Id, project.Id, tasks[0].Id, demoUser.Id,
                 ActivityActionType.TaskCreated, "created this task", now.AddMinutes(-120)),

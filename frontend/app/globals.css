@@ -869,6 +869,62 @@
     @apply mt-4 flex justify-center;
   }
 
+  .discussion-panel {
+    @apply flex min-h-[28rem] flex-col gap-4 p-0;
+  }
+
+  .discussion-message-list {
+    @apply max-h-[min(52vh,28rem)] space-y-4 overflow-y-auto px-4 pt-4;
+  }
+
+  .discussion-message {
+    @apply flex gap-3;
+  }
+
+  .discussion-message-own {
+    @apply flex-row-reverse;
+  }
+
+  .discussion-message-avatar {
+    @apply flex size-9 shrink-0 items-center justify-center rounded-full bg-[var(--wlx-brand-light)] text-xs font-semibold text-white;
+  }
+
+  .discussion-message-body {
+    @apply min-w-0 max-w-[min(100%,36rem)] rounded-xl border border-[var(--wlx-border)] bg-[var(--wlx-surface-subtle)] px-3.5 py-2.5;
+  }
+
+  .discussion-message-own .discussion-message-body {
+    @apply border-[color-mix(in_srgb,var(--wlx-brand)_24%,var(--wlx-border))] bg-[var(--wlx-brand-soft)];
+  }
+
+  .discussion-message-meta {
+    @apply mb-1 flex flex-wrap items-center gap-2;
+  }
+
+  .discussion-message-author {
+    @apply text-sm font-semibold text-[var(--wlx-text)];
+  }
+
+  .discussion-message-time {
+    @apply text-xs text-[var(--wlx-muted)];
+  }
+
+  .discussion-message-text {
+    @apply whitespace-pre-wrap text-sm leading-6 text-[var(--wlx-text-secondary)];
+  }
+
+  .discussion-composer {
+    @apply border-t border-[var(--wlx-border)] px-4 py-4;
+  }
+
+  .discussion-composer-input {
+    @apply min-h-24 w-full resize-y rounded-lg border border-[var(--wlx-border)] bg-white px-3 py-2.5 text-sm text-[var(--wlx-text)] outline-none transition-colors placeholder:text-[var(--wlx-muted)] focus-visible:border-[var(--wlx-brand)] focus-visible:ring-2 focus-visible:ring-[var(--wlx-brand)]/20;
+  }
+
+  .discussion-composer-actions {
+    @apply mt-3 flex flex-wrap items-center justify-between gap-3;
+  }
+
   .landing-shell {
     @apply flex min-h-full flex-col;
     background:

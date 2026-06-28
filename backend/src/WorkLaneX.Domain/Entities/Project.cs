@@ -12,4 +12,5 @@ public class Project : BaseEntity
 
     public ICollection<TaskItem> Tasks { get; set; } = [];
     public ICollection<ProjectDocument> Documents { get; set; } = [];
+    public ICollection<ProjectMessage> Messages { get; set; } = [];
 }

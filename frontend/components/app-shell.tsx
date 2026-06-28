@@ -9,6 +9,7 @@ import { BoardQuickFilters } from "@/components/board-quick-filters";
 import { EmptyState } from "@/components/empty-state";
 import { DashboardView } from "@/components/dashboard-view";
 import { DocsView } from "@/components/docs-view";
+import { DiscussionView } from "@/components/discussion-view";
 import { LoadingState } from "@/components/loading-state";
 import { MeetingsView } from "@/components/meetings-view";
 import { TaskBoard } from "@/components/task-board";
@@ -16,6 +17,7 @@ import { useAuth } from "@/components/auth-provider";
 import {
   appPathFor,
   isProjectAppPath,
+  isProjectScopedView,
   parseAppPath,
   SELECTED_PROJECT_KEY,
   type MainView,
@@ -32,6 +34,7 @@ function isRecognizedAppPath(pathname: string): boolean {
     normalized === "/app/board" ||
     normalized === "/app/docs" ||
     normalized === "/app/meetings" ||
+    normalized === "/app/discussion" ||
     isProjectAppPath(normalized)
   );
 }
@@ -144,8 +147,7 @@ export function AppShell() {
       setSelectedProject(project);
       localStorage.setItem(SELECTED_PROJECT_KEY, project.id);
       if (options?.navigate !== false) {
-        const targetView =
-          mainView === "docs" || mainView === "meetings" ? mainView : "board";
+        const targetView = isProjectScopedView(mainView) ? mainView : "board";
         router.push(appPathFor(targetView, project.id));
       }
     },
@@ -183,6 +185,8 @@ export function AppShell() {
     mainView === "docs" && routeProjectId && selectedProject && selectedWorkspace;
   const showMeetings =
     mainView === "meetings" && routeProjectId && selectedProject && selectedWorkspace;
+  const showDiscussion =
+    mainView === "discussion" && routeProjectId && selectedProject && selectedWorkspace;
 
   const hasActiveBoardQuery =
     searchQuery.trim().length > 0 || countActiveBoardFilters(boardFilters) > 0;
@@ -194,7 +198,9 @@ export function AppShell() {
         ? "Docs"
         : mainView === "meetings"
           ? "Meetings"
-          : "Board";
+          : mainView === "discussion"
+            ? "Discussion"
+            : "Board";
 
   return (
     <div className="jira-shell app-layout">
@@ -219,6 +225,7 @@ export function AppShell() {
         onShowBoard={() => navigateToView("board")}
         onShowDocs={() => navigateToView("docs")}
         onShowMeetings={() => navigateToView("meetings")}
+        onShowDiscussion={() => navigateToView("discussion")}
       />
 
       <div className="jira-main">
@@ -236,7 +243,7 @@ export function AppShell() {
               <h1 className="jira-board-title">{headerTitle}</h1>
             </div>
             <div className="flex items-center gap-2">
-              {(showBoard || showDocs || showMeetings) && selectedProject ? (
+              {(showBoard || showDocs || showMeetings || showDiscussion) && selectedProject ? (
                 <span className="jira-filter-btn cursor-default">
                   {selectedProject.name}
                 </span>
@@ -308,9 +315,16 @@ export function AppShell() {
               workspaceRole={workspaceRole}
               userId={user.id}
             />
+          ) : showDiscussion && user ? (
+            <DiscussionView
+              key={selectedProject.id}
+              projectId={selectedProject.id}
+              projectName={selectedProject.name}
+              userId={user.id}
+            />
           ) : routeProjectId && !selectedProject && selectedWorkspace ? (
             <LoadingState label="Loading project…" />
-          ) : mainView === "board" || mainView === "docs" || mainView === "meetings" ? (
+          ) : isProjectScopedView(mainView) ? (
             <EmptyState
               icon={FolderKanban}
               title="Select a project"
@@ -319,7 +333,9 @@ export function AppShell() {
                   ? "its docs"
                   : mainView === "meetings"
                     ? "its meeting notes"
-                    : "its board"
+                    : mainView === "discussion"
+                      ? "its discussion"
+                      : "its board"
               }.`}
             />
           ) : null}

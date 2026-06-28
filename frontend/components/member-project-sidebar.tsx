@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { FileText, FolderKanban, LayoutDashboard, LayoutGrid, NotebookPen } from "lucide-react";
+import { FileText, FolderKanban, LayoutDashboard, LayoutGrid, MessageSquare, NotebookPen } from "lucide-react";
 
 import type { MainView } from "@/lib/app-navigation";
 import { SELECTED_PROJECT_KEY } from "@/lib/app-navigation";
@@ -26,6 +26,7 @@ type MemberProjectSidebarProps = {
   onShowBoard: () => void;
   onShowDocs: () => void;
   onShowMeetings: () => void;
+  onShowDiscussion: () => void;
 };
 
 export function MemberProjectSidebar({
@@ -38,6 +39,7 @@ export function MemberProjectSidebar({
   onShowBoard,
   onShowDocs,
   onShowMeetings,
+  onShowDiscussion,
 }: MemberProjectSidebarProps) {
   const [workspaces, setWorkspaces] = useState<WorkspaceSummary[]>([]);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
@@ -153,6 +155,17 @@ export function MemberProjectSidebar({
         >
           <NotebookPen className="shrink-0" />
           <span>Meetings</span>
+        </button>
+        <button
+          type="button"
+          onClick={onShowDiscussion}
+          className={cn(
+            "jira-nav-item",
+            mainView === "discussion" && "jira-nav-item-active",
+          )}
+        >
+          <MessageSquare className="shrink-0" />
+          <span>Discussion</span>
         </button>
       </div>
 
