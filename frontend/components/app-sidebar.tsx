@@ -91,17 +91,21 @@ export function AppSidebar({
   }, [onMobileClose]);
 
   const handleSelectWorkspace = useCallback(
-    (workspace: WorkspaceSummary) => {
-      onSelectWorkspace(workspace);
-      closeMobileNav();
+    (workspace: WorkspaceSummary, options?: { navigate?: boolean }) => {
+      onSelectWorkspace(workspace, options);
+      if (options?.navigate !== false) {
+        closeMobileNav();
+      }
     },
     [closeMobileNav, onSelectWorkspace],
   );
 
   const handleSelectProject = useCallback(
-    (project: ProjectSummary) => {
-      onSelectProject(project);
-      closeMobileNav();
+    (project: ProjectSummary, options?: { navigate?: boolean }) => {
+      onSelectProject(project, options);
+      if (options?.navigate !== false) {
+        closeMobileNav();
+      }
     },
     [closeMobileNav, onSelectProject],
   );

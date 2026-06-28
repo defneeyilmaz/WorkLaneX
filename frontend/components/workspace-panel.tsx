@@ -81,7 +81,10 @@ export function WorkspacePanel({
         action={
           <button
             type="button"
-            onClick={() => setCreateOpen(true)}
+            onClick={(event) => {
+              event.stopPropagation();
+              setCreateOpen(true);
+            }}
             className="lane-add-btn"
             aria-label="Create workspace"
           >

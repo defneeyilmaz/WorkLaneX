@@ -205,7 +205,11 @@ export function SidebarFlyoutSection({
             <span className="jira-sidebar-label jira-sidebar-label-bright">{title}</span>
           </button>
           {action ? (
-            <div className="shrink-0" onPointerDown={(event) => event.stopPropagation()}>
+            <div
+              className="relative z-10 shrink-0"
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => event.stopPropagation()}
+            >
               {action}
             </div>
           ) : null}

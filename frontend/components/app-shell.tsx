@@ -65,7 +65,8 @@ export function AppShell() {
   }, [routeProjectId, mainView]);
 
   useEffect(() => {
-    if (!routeProjectId || !selectedWorkspace) {
+    const workspaceId = selectedWorkspace?.id;
+    if (!routeProjectId || !workspaceId) {
       return;
     }
 
@@ -73,14 +74,16 @@ export function AppShell() {
 
     async function resolveProjectFromRoute() {
       try {
-        const projects = await fetchWorkspaceProjects(selectedWorkspace!.id);
+        const projects = await fetchWorkspaceProjects(workspaceId);
         if (cancelled) {
           return;
         }
 
         const project = projects.find((item) => item.id === routeProjectId);
         if (project) {
-          setSelectedProject(project);
+          setSelectedProject((current) =>
+            current?.id === project.id ? current : project,
+          );
           localStorage.setItem(SELECTED_PROJECT_KEY, project.id);
           return;
         }
@@ -99,7 +102,7 @@ export function AppShell() {
     return () => {
       cancelled = true;
     };
-  }, [mainView, routeProjectId, router, selectedWorkspace]);
+  }, [mainView, routeProjectId, router, selectedWorkspace?.id]);
 
   useEffect(() => {
     if (!sidebarOpen) {
@@ -128,23 +131,24 @@ export function AppShell() {
 
   const handleSelectWorkspace = useCallback(
     (workspace: WorkspaceSummary, options?: { navigate?: boolean }) => {
-      setSelectedWorkspace((current) => {
-        const changed = current?.id !== workspace.id;
-        if (changed) {
-          setSelectedProject(null);
-          if (options?.navigate !== false) {
-            router.push("/app");
-          }
-        }
-        return workspace;
-      });
+      const changed = selectedWorkspace?.id !== workspace.id;
+      if (!changed) {
+        return;
+      }
+      setSelectedWorkspace(workspace);
+      setSelectedProject(null);
+      if (options?.navigate !== false) {
+        router.push("/app");
+      }
     },
-    [router],
+    [router, selectedWorkspace?.id],
   );
 
   const handleSelectProject = useCallback(
     (project: ProjectSummary, options?: { navigate?: boolean }) => {
-      setSelectedProject(project);
+      setSelectedProject((current) =>
+        current?.id === project.id ? current : project,
+      );
       localStorage.setItem(SELECTED_PROJECT_KEY, project.id);
       if (options?.navigate !== false) {
         const targetView = isProjectScopedView(mainView) ? mainView : "board";
