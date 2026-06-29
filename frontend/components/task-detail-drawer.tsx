@@ -2,7 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Sparkles, X } from "lucide-react";
+import { Check, Sparkles, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import {
 } from "@/lib/ai";
 import {
   canApproveTasks,
+  canCreateTask,
   canInteractWithTask,
   isManagerRole,
   memberAllowedStatuses,
@@ -31,6 +32,7 @@ import {
 } from "@/lib/task-comments";
 import {
   approveTask,
+  createTask,
   getTaskErrorMessage,
   rejectTask,
   type TaskPriority,
@@ -63,6 +65,7 @@ type TaskDetailDrawerProps = {
   members: WorkspaceMemberSummary[];
   onClose: () => void;
   onSaved: (task: TaskSummary) => void;
+  onTasksCreated?: (tasks: TaskSummary[]) => void;
 };
 
 export function TaskDetailDrawer({
@@ -73,6 +76,7 @@ export function TaskDetailDrawer({
   members,
   onClose,
   onSaved,
+  onTasksCreated,
 }: TaskDetailDrawerProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -94,6 +98,14 @@ export function TaskDetailDrawer({
   const [breakdown, setBreakdown] = useState<TaskBreakdownResult | null>(null);
   const [breakdownLoading, setBreakdownLoading] = useState(false);
   const [breakdownError, setBreakdownError] = useState<string | null>(null);
+  const [selectedSubtaskIndexes, setSelectedSubtaskIndexes] = useState<Set<number>>(
+    () => new Set(),
+  );
+  const [addedSubtaskIndexes, setAddedSubtaskIndexes] = useState<Set<number>>(
+    () => new Set(),
+  );
+  const [creatingTasks, setCreatingTasks] = useState(false);
+  const [createTasksError, setCreateTasksError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -117,6 +129,18 @@ export function TaskDetailDrawer({
   const isManager = isManagerRole(role);
   const canEdit =
     task !== null && (isManager || canInteractWithTask(role, task, userId));
+  const canAddSubtasks =
+    canCreateTask(role) && Boolean(onTasksCreated) && task !== null;
+  const pendingSubtaskCount =
+    breakdown?.subtasks.reduce((count, _, index) => {
+      if (
+        selectedSubtaskIndexes.has(index) &&
+        !addedSubtaskIndexes.has(index)
+      ) {
+        return count + 1;
+      }
+      return count;
+    }, 0) ?? 0;
 
   useEffect(() => {
     if (!task) {
@@ -135,7 +159,25 @@ export function TaskDetailDrawer({
     setCommentError(null);
     setBreakdown(null);
     setBreakdownError(null);
+    setSelectedSubtaskIndexes(new Set());
+    setAddedSubtaskIndexes(new Set());
+    setCreateTasksError(null);
   }, [task]);
+
+  useEffect(() => {
+    if (!breakdown?.subtasks.length) {
+      setSelectedSubtaskIndexes(new Set());
+      setAddedSubtaskIndexes(new Set());
+      setCreateTasksError(null);
+      return;
+    }
+
+    setSelectedSubtaskIndexes(
+      new Set(breakdown.subtasks.map((_, index) => index)),
+    );
+    setAddedSubtaskIndexes(new Set());
+    setCreateTasksError(null);
+  }, [breakdown]);
 
   const loadComments = useCallback(async () => {
     if (!task) {
@@ -263,6 +305,90 @@ export function TaskDetailDrawer({
       setBreakdownError(getAiErrorMessage(err));
     } finally {
       setBreakdownLoading(false);
+    }
+  }
+
+  function toggleSubtaskSelection(index: number) {
+    if (addedSubtaskIndexes.has(index)) {
+      return;
+    }
+
+    setSelectedSubtaskIndexes((current) => {
+      const next = new Set(current);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  }
+
+  async function handleAddSubtasksToBoard() {
+    if (!task || !breakdown || !onTasksCreated) {
+      return;
+    }
+
+    const indexes = breakdown.subtasks
+      .map((_, index) => index)
+      .filter(
+        (index) =>
+          selectedSubtaskIndexes.has(index) && !addedSubtaskIndexes.has(index),
+      );
+
+    if (indexes.length === 0) {
+      return;
+    }
+
+    setCreateTasksError(null);
+    setCreatingTasks(true);
+
+    const created: TaskSummary[] = [];
+    const succeededIndexes: number[] = [];
+
+    try {
+      for (const index of indexes) {
+        const subtask = breakdown.subtasks[index];
+        const createdTask = await createTask(
+          task.projectId,
+          subtask.title,
+          subtask.description ?? "",
+          subtask.priority,
+          task.assigneeId,
+        );
+        created.push(createdTask);
+        succeededIndexes.push(index);
+      }
+
+      onTasksCreated(created);
+      setAddedSubtaskIndexes((current) => {
+        const next = new Set(current);
+        for (const index of succeededIndexes) {
+          next.add(index);
+        }
+        return next;
+      });
+      setSelectedSubtaskIndexes((current) => {
+        const next = new Set(current);
+        for (const index of succeededIndexes) {
+          next.delete(index);
+        }
+        return next;
+      });
+    } catch (err) {
+      if (created.length > 0) {
+        onTasksCreated(created);
+        setAddedSubtaskIndexes((current) => {
+          const next = new Set(current);
+          for (const index of succeededIndexes) {
+            next.add(index);
+          }
+          return next;
+        });
+      }
+      setCreateTasksError(getTaskErrorMessage(err));
+    } finally {
+      setCreatingTasks(false);
     }
   }
 
@@ -504,11 +630,18 @@ export function TaskDetailDrawer({
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Suggestions only — they are not added to the board automatically.
+                {canAddSubtasks
+                  ? "Review the suggestions, then add selected items to the To Do column."
+                  : "Suggestions only — they are not added to the board automatically."}
               </p>
               {breakdownError ? (
                 <p className="text-sm text-destructive" role="alert">
                   {breakdownError}
+                </p>
+              ) : null}
+              {createTasksError ? (
+                <p className="text-sm text-destructive" role="alert">
+                  {createTasksError}
                 </p>
               ) : null}
               {breakdown?.usedMockProvider ? (
@@ -516,29 +649,71 @@ export function TaskDetailDrawer({
                   Demo mode: add an OpenAI API key for live suggestions.
                 </p>
               ) : null}
+              {canAddSubtasks && breakdown && breakdown.subtasks.length > 0 ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={creatingTasks || pendingSubtaskCount === 0}
+                  onClick={() => void handleAddSubtasksToBoard()}
+                >
+                  {creatingTasks
+                    ? "Adding…"
+                    : pendingSubtaskCount === breakdown.subtasks.length
+                      ? `Add all ${pendingSubtaskCount} to board`
+                      : `Add ${pendingSubtaskCount} to board`}
+                </Button>
+              ) : null}
               {breakdown && breakdown.subtasks.length > 0 ? (
                 <ul className="space-y-2">
-                  {breakdown.subtasks.map((subtask, index) => (
-                    <li
-                      key={`${subtask.title}-${index}`}
-                      className="rounded-lg border border-[#e7e5e4] bg-[#fafaf9] px-3 py-2.5 text-sm"
-                    >
-                      <div className="flex flex-wrap items-center gap-2">
-                        <p className="font-semibold text-[#1c1917]">{subtask.title}</p>
-                        <span
-                          className={cn(
-                            "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
-                            PRIORITY_STRIPE[subtask.priority],
-                          )}
-                        >
-                          {subtask.priority}
-                        </span>
-                      </div>
-                      {subtask.description ? (
-                        <p className="mt-1 text-[#44403c]">{subtask.description}</p>
-                      ) : null}
-                    </li>
-                  ))}
+                  {breakdown.subtasks.map((subtask, index) => {
+                    const isAdded = addedSubtaskIndexes.has(index);
+                    const isSelected = selectedSubtaskIndexes.has(index);
+
+                    return (
+                      <li
+                        key={`${subtask.title}-${index}`}
+                        className={cn(
+                          "rounded-lg border border-[#e7e5e4] bg-[#fafaf9] px-3 py-2.5 text-sm",
+                          isAdded && "opacity-70",
+                        )}
+                      >
+                        <div className="flex items-start gap-2.5">
+                          {canAddSubtasks ? (
+                            <input
+                              type="checkbox"
+                              className="mt-1 size-4 shrink-0 accent-[var(--wlx-brand)]"
+                              checked={isSelected}
+                              disabled={isAdded || creatingTasks}
+                              onChange={() => toggleSubtaskSelection(index)}
+                              aria-label={`Select ${subtask.title}`}
+                            />
+                          ) : null}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-semibold text-[#1c1917]">{subtask.title}</p>
+                              <span
+                                className={cn(
+                                  "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide",
+                                  PRIORITY_STRIPE[subtask.priority],
+                                )}
+                              >
+                                {subtask.priority}
+                              </span>
+                              {isAdded ? (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-[#e7f8ef] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-[#216e4e]">
+                                  <Check className="size-3" />
+                                  Added
+                                </span>
+                              ) : null}
+                            </div>
+                            {subtask.description ? (
+                              <p className="mt-1 text-[#44403c]">{subtask.description}</p>
+                            ) : null}
+                          </div>
+                        </div>
+                      </li>
+                    );
+                  })}
                 </ul>
               ) : breakdown && !breakdownLoading ? (
                 <p className="text-sm text-muted-foreground">No subtasks suggested.</p>

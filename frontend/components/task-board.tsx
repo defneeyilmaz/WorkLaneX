@@ -625,6 +625,13 @@ export function TaskBoard({
     setTasks((current) => [created, ...current]);
   }
 
+  function handleTasksCreated(created: TaskSummary[]) {
+    if (created.length === 0) {
+      return;
+    }
+    setTasks((current) => [...created, ...current]);
+  }
+
   return (
     <div>
       {error ? (
@@ -708,6 +715,7 @@ export function TaskBoard({
         members={members}
         onClose={handleCloseDrawer}
         onSaved={handleTaskSaved}
+        onTasksCreated={canCreateTask(role) ? handleTasksCreated : undefined}
       />
     </div>
   );
