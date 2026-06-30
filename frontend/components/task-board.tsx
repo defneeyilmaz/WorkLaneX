@@ -632,6 +632,12 @@ export function TaskBoard({
     setTasks((current) => [...created, ...current]);
   }
 
+  function handleTaskDeleted(taskId: string) {
+    setTasks((current) => current.filter((task) => task.id !== taskId));
+    setSelectedTask(null);
+    setDrawerOpen(false);
+  }
+
   return (
     <div>
       {error ? (
@@ -716,6 +722,7 @@ export function TaskBoard({
         onClose={handleCloseDrawer}
         onSaved={handleTaskSaved}
         onTasksCreated={canCreateTask(role) ? handleTasksCreated : undefined}
+        onDeleted={isManagerRole(role) ? handleTaskDeleted : undefined}
       />
     </div>
   );

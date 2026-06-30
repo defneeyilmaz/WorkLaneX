@@ -33,6 +33,7 @@ import {
 import {
   approveTask,
   createTask,
+  deleteTask,
   getTaskErrorMessage,
   rejectTask,
   type TaskPriority,
@@ -66,6 +67,7 @@ type TaskDetailDrawerProps = {
   onClose: () => void;
   onSaved: (task: TaskSummary) => void;
   onTasksCreated?: (tasks: TaskSummary[]) => void;
+  onDeleted?: (taskId: string) => void;
 };
 
 export function TaskDetailDrawer({
@@ -77,6 +79,7 @@ export function TaskDetailDrawer({
   onClose,
   onSaved,
   onTasksCreated,
+  onDeleted,
 }: TaskDetailDrawerProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -87,6 +90,7 @@ export function TaskDetailDrawer({
   const [rejectionNote, setRejectionNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [comments, setComments] = useState<TaskCommentSummary[]>([]);
   const [commentsLoading, setCommentsLoading] = useState(false);
@@ -408,6 +412,28 @@ export function TaskDetailDrawer({
       setError(getTaskErrorMessage(err));
     } finally {
       setIsApproving(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!task || !isManager) {
+      return;
+    }
+
+    if (!window.confirm(`Delete "${task.title}"? This cannot be undone.`)) {
+      return;
+    }
+
+    setError(null);
+    setIsDeleting(true);
+    try {
+      await deleteTask(task.id);
+      onDeleted?.(task.id);
+      onClose();
+    } catch (err) {
+      setError(getTaskErrorMessage(err));
+    } finally {
+      setIsDeleting(false);
     }
   }
 
@@ -843,20 +869,34 @@ export function TaskDetailDrawer({
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-[#e7e5e4] px-6 py-4">
-            <Button
-              type="button"
-              variant="outline"
-              className="dialog-btn-cancel"
-              onClick={onClose}
-            >
-              Cancel
-            </Button>
-            {canEdit ? (
-              <Button type="submit" disabled={isSaving}>
-                {isSaving ? "Saving…" : "Save changes"}
+          <div className="flex shrink-0 items-center justify-between gap-2 border-t border-[#e7e5e4] px-6 py-4">
+            {isManager ? (
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={isDeleting || isSaving}
+                onClick={() => void handleDelete()}
+              >
+                {isDeleting ? "Deleting…" : "Delete task"}
               </Button>
-            ) : null}
+            ) : (
+              <span />
+            )}
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="dialog-btn-cancel"
+                onClick={onClose}
+              >
+                Cancel
+              </Button>
+              {canEdit ? (
+                <Button type="submit" disabled={isSaving || isDeleting}>
+                  {isSaving ? "Saving…" : "Save changes"}
+                </Button>
+              ) : null}
+            </div>
           </div>
         </form>
       </div>

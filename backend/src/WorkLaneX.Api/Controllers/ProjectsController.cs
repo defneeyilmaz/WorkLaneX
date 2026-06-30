@@ -12,6 +12,7 @@ using WorkLaneX.Application.Features.Messages.Queries.ListProjectMessages;
 using WorkLaneX.Application.Features.Tasks.Commands.AddTaskComment;
 using WorkLaneX.Application.Features.Tasks.Commands.ApproveTask;
 using WorkLaneX.Application.Features.Tasks.Commands.CreateTask;
+using WorkLaneX.Application.Features.Tasks.Commands.DeleteTask;
 using WorkLaneX.Application.Features.Tasks.Commands.RejectTask;
 using WorkLaneX.Application.Features.Tasks.Commands.MoveTask;
 using WorkLaneX.Application.Features.Tasks.Commands.UpdateTask;
@@ -159,6 +160,24 @@ public class ProjectsController : ControllerBase
         {
             return BadRequest(new { errors = ex.Errors.Select(e => e.ErrorMessage) });
         }
+    }
+
+    [HttpDelete("tasks/{taskId:guid}")]
+    public async Task<IActionResult> DeleteTask(
+        Guid taskId,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new DeleteTaskCommand(taskId), cancellationToken);
+
+        if (!result.Succeeded)
+        {
+            var status = result.Error?.Contains("permission", StringComparison.OrdinalIgnoreCase) == true
+                ? StatusCodes.Status403Forbidden
+                : StatusCodes.Status404NotFound;
+            return StatusCode(status, new { error = result.Error });
+        }
+
+        return NoContent();
     }
 
     [HttpPost("tasks/{taskId:guid}/approve")]

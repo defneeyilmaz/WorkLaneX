@@ -141,6 +141,10 @@ export async function rejectTask(
   return data;
 }
 
+export async function deleteTask(taskId: string): Promise<void> {
+  await api.delete(`/api/projects/tasks/${taskId}`);
+}
+
 export function getTaskErrorMessage(error: unknown): string {
   if (axios.isAxiosError<{ error?: string; errors?: string[] }>(error)) {
     const data = error.response?.data;
