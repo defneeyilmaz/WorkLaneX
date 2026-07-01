@@ -14,6 +14,8 @@ import {
   type TaskSummary,
 } from "@/lib/tasks";
 import type { WorkspaceMemberSummary } from "@/lib/workspaces";
+import { useDeferredEffect } from "@/lib/use-deferred-effect";
+import { useIsClient } from "@/lib/use-is-client";
 
 type CreateTaskDialogProps = {
   open: boolean;
@@ -38,13 +40,9 @@ export function CreateTaskDialog({
   const [assigneeId, setAssigneeId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsClient();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
+  useDeferredEffect(() => {
     if (!open) {
       return;
     }

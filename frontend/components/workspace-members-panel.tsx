@@ -19,6 +19,8 @@ import {
   type WorkspaceMemberSummary,
   type WorkspaceRole,
 } from "@/lib/workspaces";
+import { useDeferredEffect } from "@/lib/use-deferred-effect";
+import { useIsClient } from "@/lib/use-is-client";
 
 type WorkspaceMembersPanelProps = {
   workspaceId: string;
@@ -36,7 +38,7 @@ export function WorkspaceMembersPanel({
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsClient();
 
   const normalizedRole = normalizeWorkspaceRole(actorRole);
 
@@ -57,15 +59,9 @@ export function WorkspaceMembersPanel({
     }
   }, [normalizedRole, workspaceId]);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  useDeferredEffect(() => loadMembers(), [loadMembers]);
 
-  useEffect(() => {
-    loadMembers();
-  }, [loadMembers]);
-
-  useEffect(() => {
+  useDeferredEffect(() => {
     if (!dialogOpen) {
       return;
     }

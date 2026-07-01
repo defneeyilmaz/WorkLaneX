@@ -11,6 +11,8 @@ import { createPortal } from "react-dom";
 import { ChevronRight } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { useIsClient } from "@/lib/use-is-client";
+import { usePrefersHover } from "@/lib/use-prefers-hover";
 
 const CLOSE_DELAY_MS = 55;
 
@@ -32,8 +34,8 @@ export function SidebarFlyoutSection({
   const closeTimerRef = useRef<number | null>(null);
   const closeSelfRef = useRef<(() => void) | null>(null);
   const [open, setOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [preferHover, setPreferHover] = useState(false);
+  const mounted = useIsClient();
+  const preferHover = usePrefersHover();
   const [position, setPosition] = useState({ top: 0, left: 0 });
 
   const closeImmediately = useCallback(() => {
@@ -49,18 +51,7 @@ export function SidebarFlyoutSection({
 
   useEffect(() => {
     closeSelfRef.current = closeImmediately;
-  }, [closeImmediately]);
-
-  useEffect(() => {
-    setMounted(true);
-    const media = window.matchMedia("(hover: hover) and (pointer: fine)");
-    function syncHoverPreference() {
-      setPreferHover(media.matches);
-    }
-    syncHoverPreference();
-    media.addEventListener("change", syncHoverPreference);
     return () => {
-      media.removeEventListener("change", syncHoverPreference);
       if (closeTimerRef.current) {
         window.clearTimeout(closeTimerRef.current);
       }
@@ -68,7 +59,7 @@ export function SidebarFlyoutSection({
         activeCloseFlyout = null;
       }
     };
-  }, []);
+  }, [closeImmediately]);
 
   const updatePosition = useCallback(() => {
     const rect = triggerRef.current?.getBoundingClientRect();

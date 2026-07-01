@@ -23,7 +23,7 @@ export function isManagerRole(role: WorkspaceRole): boolean {
   return role === "Owner" || role === "Admin";
 }
 
-export function canCreateWorkspace(role: WorkspaceRole | null): boolean {
+export function canCreateWorkspace(): boolean {
   return true;
 }
 

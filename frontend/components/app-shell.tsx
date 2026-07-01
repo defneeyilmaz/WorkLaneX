@@ -26,6 +26,7 @@ import { DEFAULT_BOARD_FILTERS, countActiveBoardFilters, type BoardFilters } fro
 import { normalizeWorkspaceRole } from "@/lib/permissions";
 import { fetchWorkspaceProjects, type ProjectSummary } from "@/lib/projects";
 import type { WorkspaceSummary } from "@/lib/workspaces";
+import { useDeferredEffect } from "@/lib/use-deferred-effect";
 
 function isRecognizedAppPath(pathname: string): boolean {
   const normalized = pathname.replace(/\/$/, "") || "/app";
@@ -59,7 +60,7 @@ export function AppShell() {
     router.replace("/app");
   }, [pathname, router]);
 
-  useEffect(() => {
+  useDeferredEffect(() => {
     setSearchQuery("");
     setBoardFilters(DEFAULT_BOARD_FILTERS);
   }, [routeProjectId, mainView]);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Plus } from "lucide-react";
 
 import { CreateWorkspaceDialog } from "@/components/create-workspace-dialog";
@@ -13,6 +13,7 @@ import {
   formatWorkspaceRole,
   type WorkspaceSummary,
 } from "@/lib/workspaces";
+import { useDeferredEffect } from "@/lib/use-deferred-effect";
 
 type WorkspacePanelProps = {
   selectedWorkspaceId: string | null;
@@ -60,9 +61,7 @@ export function WorkspacePanel({
     }
   }, [onSelectWorkspace, selectedWorkspaceId]);
 
-  useEffect(() => {
-    loadWorkspaces();
-  }, [loadWorkspaces]);
+  useDeferredEffect(() => loadWorkspaces(), [loadWorkspaces]);
 
   function handleSelect(workspace: WorkspaceSummary) {
     localStorage.setItem(SELECTED_WORKSPACE_KEY, workspace.id);

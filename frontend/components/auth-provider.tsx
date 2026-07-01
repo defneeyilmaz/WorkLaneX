@@ -4,7 +4,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useMemo,
   useState,
 } from "react";
@@ -17,6 +16,7 @@ import {
   type UserSummary,
 } from "@/lib/auth";
 import { clearStoredToken, getStoredToken } from "@/lib/auth-storage";
+import { useDeferredEffect } from "@/lib/use-deferred-effect";
 
 type AuthContextValue = {
   user: UserSummary | null;
@@ -54,9 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  useEffect(() => {
-    refreshUser().finally(() => setIsLoading(false));
-  }, [refreshUser]);
+  useDeferredEffect(() => refreshUser().finally(() => setIsLoading(false)), [refreshUser]);
 
   const login = useCallback(async (email: string, password: string) => {
     const response = await loginUser(email, password);

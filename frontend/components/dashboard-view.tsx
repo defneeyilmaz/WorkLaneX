@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { FolderKanban, Inbox, Radio } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
@@ -16,6 +16,7 @@ import { canApproveTasks, normalizeWorkspaceRole } from "@/lib/permissions";
 import type { TaskStatus } from "@/lib/tasks";
 import type { WorkspaceRole } from "@/lib/workspaces";
 import { cn } from "@/lib/utils";
+import { useDeferredEffect } from "@/lib/use-deferred-effect";
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
   ToDo: "To Do",
@@ -107,9 +108,7 @@ export function DashboardView({
     }
   }, [workspaceId]);
 
-  useEffect(() => {
-    void loadDashboard();
-  }, [loadDashboard]);
+  useDeferredEffect(() => loadDashboard(), [loadDashboard]);
 
   if (isLoading) {
     return <LoadingState label="Loading dashboard…" />;

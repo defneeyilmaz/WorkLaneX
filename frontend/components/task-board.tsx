@@ -58,6 +58,7 @@ import {
 } from "@/lib/workspaces";
 import { getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
+import { useDeferredEffect } from "@/lib/use-deferred-effect";
 
 type TaskBoardProps = {
   projectId: string;
@@ -432,9 +433,9 @@ export function TaskBoard({
     }
   }, [role, workspaceId]);
 
-  useEffect(() => {
-    loadTasks();
-    loadMembers();
+  useDeferredEffect(() => {
+    void loadTasks();
+    void loadMembers();
   }, [loadTasks, loadMembers]);
 
   useEffect(() => {

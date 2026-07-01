@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { FileText, FolderKanban, LayoutDashboard, LayoutGrid, MessageSquare, NotebookPen } from "lucide-react";
 
 import type { MainView } from "@/lib/app-navigation";
@@ -9,6 +9,7 @@ import { SidebarFlyoutSection } from "@/components/sidebar-flyout-section";
 import { cn } from "@/lib/utils";
 import { fetchMyWorkspaces, formatWorkspaceRole, type WorkspaceSummary } from "@/lib/workspaces";
 import { fetchWorkspaceProjects, type ProjectSummary } from "@/lib/projects";
+import { useDeferredEffect } from "@/lib/use-deferred-effect";
 
 type MemberProjectSidebarProps = {
   selectedWorkspaceId: string | null;
@@ -45,8 +46,8 @@ export function MemberProjectSidebar({
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchMyWorkspaces()
+  useDeferredEffect(() => {
+    void fetchMyWorkspaces()
       .then((data) => {
         setWorkspaces(data);
         if (data.length > 0 && !selectedWorkspaceId) {
@@ -83,9 +84,9 @@ export function MemberProjectSidebar({
     }
   }, [onSelectProject, selectedProjectId]);
 
-  useEffect(() => {
+  useDeferredEffect(() => {
     if (selectedWorkspaceId) {
-      void loadProjects(selectedWorkspaceId);
+      return loadProjects(selectedWorkspaceId);
     }
   }, [loadProjects, selectedWorkspaceId]);
 

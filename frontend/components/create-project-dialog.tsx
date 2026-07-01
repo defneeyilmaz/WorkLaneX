@@ -12,6 +12,8 @@ import {
   getProjectErrorMessage,
   type ProjectSummary,
 } from "@/lib/projects";
+import { useDeferredEffect } from "@/lib/use-deferred-effect";
+import { useIsClient } from "@/lib/use-is-client";
 
 type CreateProjectDialogProps = {
   open: boolean;
@@ -32,13 +34,9 @@ export function CreateProjectDialog({
   const [description, setDescription] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsClient();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
+  useDeferredEffect(() => {
     if (!open) {
       return;
     }

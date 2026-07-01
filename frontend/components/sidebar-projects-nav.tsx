@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { FolderKanban, Plus } from "lucide-react";
 
 import { CreateProjectDialog } from "@/components/create-project-dialog";
@@ -14,6 +14,7 @@ import {
   type ProjectSummary,
 } from "@/lib/projects";
 import type { WorkspaceRole } from "@/lib/workspaces";
+import { useDeferredEffect } from "@/lib/use-deferred-effect";
 
 type SidebarProjectsNavProps = {
   workspaceId: string;
@@ -70,9 +71,7 @@ export function SidebarProjectsNav({
     }
   }, [onSelectProject, selectedProjectId, workspaceId]);
 
-  useEffect(() => {
-    loadProjects();
-  }, [loadProjects]);
+  useDeferredEffect(() => loadProjects(), [loadProjects]);
 
   function handleSelect(project: ProjectSummary) {
     localStorage.setItem(SELECTED_PROJECT_KEY, project.id);

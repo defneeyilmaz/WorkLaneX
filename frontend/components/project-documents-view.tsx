@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { ArrowLeft, FileText, Plus, Trash2 } from "lucide-react";
 
 import { EmptyState } from "@/components/empty-state";
@@ -26,6 +26,7 @@ import {
 import { isManagerRole } from "@/lib/permissions";
 import type { WorkspaceRole } from "@/lib/workspaces";
 import { cn } from "@/lib/utils";
+import { useDeferredEffect } from "@/lib/use-deferred-effect";
 
 type EditorPane = "write" | "preview";
 
@@ -83,13 +84,13 @@ export function ProjectDocumentsView({
     }
   }, [documentType, projectId]);
 
-  useEffect(() => {
+  useDeferredEffect(() => {
     setActiveDocument(null);
     setIsNew(false);
     setTitle("");
     setContent("");
     setMeetingHeldAt("");
-    void loadDocuments();
+    return loadDocuments();
   }, [loadDocuments, projectId]);
 
   const openNewDocument = () => {

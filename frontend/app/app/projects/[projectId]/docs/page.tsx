@@ -1,7 +1,3 @@
-type ProjectDocsPageProps = {
-  params: Promise<{ projectId: string }>;
-};
-
-export default async function ProjectDocsPage(_props: ProjectDocsPageProps) {
+export default async function ProjectDocsPage() {
   return null;
 }

@@ -43,6 +43,8 @@ import {
 } from "@/lib/tasks";
 import type { WorkspaceMemberSummary, WorkspaceRole } from "@/lib/workspaces";
 import { cn } from "@/lib/utils";
+import { useDeferredEffect } from "@/lib/use-deferred-effect";
+import { useIsClient } from "@/lib/use-is-client";
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
   ToDo: "To Do",
@@ -110,11 +112,7 @@ export function TaskDetailDrawer({
   );
   const [creatingTasks, setCreatingTasks] = useState(false);
   const [createTasksError, setCreateTasksError] = useState<string | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useIsClient();
 
   useEffect(() => {
     if (!open) {
@@ -146,7 +144,7 @@ export function TaskDetailDrawer({
       return count;
     }, 0) ?? 0;
 
-  useEffect(() => {
+  useDeferredEffect(() => {
     if (!task) {
       return;
     }
@@ -168,7 +166,7 @@ export function TaskDetailDrawer({
     setCreateTasksError(null);
   }, [task]);
 
-  useEffect(() => {
+  useDeferredEffect(() => {
     if (!breakdown?.subtasks.length) {
       setSelectedSubtaskIndexes(new Set());
       setAddedSubtaskIndexes(new Set());
@@ -220,11 +218,11 @@ export function TaskDetailDrawer({
     await Promise.all([loadComments(), loadActivity()]);
   }, [loadActivity, loadComments]);
 
-  useEffect(() => {
+  useDeferredEffect(() => {
     if (!open || !task) {
       return;
     }
-    void refreshSidePanel();
+    return refreshSidePanel();
   }, [open, task, refreshSidePanel]);
 
   if (!open || !task || !mounted) {

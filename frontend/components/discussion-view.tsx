@@ -16,6 +16,7 @@ import {
 import { connectProjectRealtime } from "@/lib/project-realtime";
 import { getInitials } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
+import { useDeferredEffect } from "@/lib/use-deferred-effect";
 
 type DiscussionViewProps = {
   projectId: string;
@@ -62,9 +63,7 @@ export function DiscussionView({
     }
   }, [projectId]);
 
-  useEffect(() => {
-    void loadMessages();
-  }, [loadMessages]);
+  useDeferredEffect(() => loadMessages(), [loadMessages]);
 
   useEffect(() => {
     if (!isLoading && messages.length > 0) {
