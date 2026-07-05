@@ -71,11 +71,12 @@ export function AppShell() {
       return;
     }
 
+    const activeWorkspaceId = workspaceId;
     let cancelled = false;
 
     async function resolveProjectFromRoute() {
       try {
-        const projects = await fetchWorkspaceProjects(workspaceId);
+        const projects = await fetchWorkspaceProjects(activeWorkspaceId);
         if (cancelled) {
           return;
         }
